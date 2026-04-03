@@ -15,6 +15,7 @@
 #include <QUrl>
 #include <QSettings>
 #include <QCoreApplication>
+#include <QImageReader>
  
  
 
@@ -361,11 +362,11 @@ void MainWindow::updateResultGrid(const std::vector<DuplicateGroup>& groups) {
 
     int row = 0;
     for (const auto& group : groups) {
-        // グループ内で最小のファイルサイズを見つける
-        int64_t minSize = -1;
-        for (const auto& img : group.images) {
-            if (minSize == -1 || img.file_size < minSize) {
-                minSize = img.file_size;
+        // グループ内で残す1枚（ファイルサイズが最大のもの。同サイズなら最初の1枚）を特定する
+        const ImageData* bestImage = &group.images[0];
+        for (size_t i = 1; i < group.images.size(); ++i) {
+            if (group.images[i].file_size > bestImage->file_size) {
+                bestImage = &group.images[i];
             }
         }
 
@@ -384,9 +385,22 @@ void MainWindow::updateResultGrid(const std::vector<DuplicateGroup>& groups) {
             thumb->setProperty("filePath", QString::fromStdString(imgData.path));
             thumb->installEventFilter(this);
             thumb->setToolTip("Double click to open");
- 
-            QPixmap pix(QString::fromStdString(imgData.path));
-            if (!pix.isNull()) {
+  
+            QImageReader reader(QString::fromStdString(imgData.path));
+            reader.setAutoTransform(true);
+            reader.setAllocationLimit(512); // デフォルト128MB制限を512MBに引き上げ
+
+            QSize imgSize = reader.size();
+            if (imgSize.isValid()) {
+                // サムネイル表示に必要なサイズ（高階調な表示のためここでは高めでもよいが、150x150枠）に
+                // デコード段階で縮小指定する。JPEG等では飛躍的に高速化・省メモリ化される。
+                imgSize.scale(300, 300, Qt::KeepAspectRatio);
+                reader.setScaledSize(imgSize);
+            }
+
+            QImage img = reader.read();
+            if (!img.isNull()) {
+                QPixmap pix = QPixmap::fromImage(img);
                 thumb->setPixmap(pix.scaled(150, 150, Qt::KeepAspectRatio, Qt::SmoothTransformation));
             } else {
                 thumb->setText("Error Loading");
@@ -394,11 +408,9 @@ void MainWindow::updateResultGrid(const std::vector<DuplicateGroup>& groups) {
             thumb->setAlignment(Qt::AlignCenter);
             vBox->addWidget(thumb);
 
-            // 自動チェック: 最小サイズの場合（かつ、グループ内の全てが同じサイズでない限り）
-            // 全て同じサイズの場合は最初の1枚以外をチェックするなどのロジックも検討できるが、
-            // ここではシンプルに「最小サイズ」をチェック候補とする
+            // 自動チェック: 残す1枚（bestImage）以外を削除候補としてチェックする
             QCheckBox* cb = new QCheckBox("Delete candidate");
-            if (imgData.file_size == minSize) {
+            if (&imgData != bestImage) {
                 cb->setChecked(true);
             }
             vBox->addWidget(cb);
