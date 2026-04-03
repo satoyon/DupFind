@@ -1,0 +1,20 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "windows-vcpkg",
+            "displayName": "Windows vcpkg",
+            "description": "Configure for Windows using vcpkg and local Qt6 installation",
+            "generator": "Visual Studio 18 2026",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "c:/vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "Qt6_DIR": "C:/Qt/6.11.0/msvc2022_64/lib/cmake/Qt6/",
+                "Protobuf_DIR": "C:/vcpkg/installed/x64-windows/share/protobuf",
+                "flatbuffers_DIR": "C:/vcpkg/installed/x64-windows/share/flatbuffers",
+                "quirc_DIR": "C:/vcpkg/installed/x64-windows/share/quirc",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        }
+    ]
+}

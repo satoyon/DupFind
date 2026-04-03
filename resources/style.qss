@@ -1,0 +1,103 @@
+/* DupFind Modern Dark Theme */
+QMainWindow {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+}
+
+QWidget {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+QPushButton {
+    background-color: #333333;
+    border: 1px solid #444444;
+    border-radius: 4px;
+    padding: 8px 16px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #444444;
+    border: 1px solid #555555;
+}
+
+QPushButton:pressed {
+    background-color: #222222;
+}
+
+/* Delete Button Specific */
+QPushButton#deleteBtn {
+    background-color: #c0392b;
+    border: none;
+}
+
+QPushButton#deleteBtn:hover {
+    background-color: #e74c3c;
+}
+
+QListWidget {
+    background-color: #252526;
+    border: 1px solid #333333;
+    border-radius: 4px;
+    outline: 0;
+}
+
+QListWidget::item {
+    padding: 5px;
+    border-bottom: 1px solid #333333;
+}
+
+QListWidget::item:selected {
+    background-color: #37373d;
+    color: #007acc;
+}
+
+QScrollArea {
+    border: none;
+}
+
+#imgCard {
+    background-color: #2d2d2d;
+    border: 1px solid #3f3f3f;
+    border-radius: 8px;
+    margin: 5px;
+}
+
+#imgCard:hover {
+    border: 1px solid #007acc;
+    background-color: #33333d;
+}
+
+QProgressBar {
+    border: 1px solid #333333;
+    border-radius: 4px;
+    text-align: center;
+    background-color: #252526;
+}
+
+QProgressBar::chunk {
+    background-color: #007acc;
+}
+
+QLabel {
+    color: #cccccc;
+}
+
+QSlider::handle:horizontal {
+    background: #007acc;
+    border: 1px solid #007acc;
+    width: 14px;
+    height: 14px;
+    margin: -5px 0;
+    border-radius: 7px;
+}
+
+QSlider::groove:horizontal {
+    border: 1px solid #333333;
+    height: 4px;
+    background: #333333;
+    margin: 2px 0;
+}
