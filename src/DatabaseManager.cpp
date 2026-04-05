@@ -30,6 +30,8 @@ void DatabaseManager::close() {
     }
 }
 
+// データベースのテーブル構成（スキーマ）を初期化する
+// 初回起動時ならテーブルを作成、既存ならカラム追加などのマイグレーションを行う
 bool DatabaseManager::initSchema() {
     const char* sql = "CREATE TABLE IF NOT EXISTS images ("
                       "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -51,6 +53,7 @@ bool DatabaseManager::initSchema() {
     return true;
 }
 
+// 既存パスなら上書き(REPLACE)、新規なら挿入(INSERT)でDBに画像データを追加する
 bool DatabaseManager::addImage(const ImageData& data) {
     const char* sql = "INSERT OR REPLACE INTO images (path, dhash, phash, timestamp, file_size, is_searched) VALUES (?, ?, ?, ?, ?, ?);";
     sqlite3_stmt* stmt;
@@ -101,6 +104,7 @@ bool DatabaseManager::removeImage(const std::string& path) {
 }
  
 #include <filesystem>
+// DBにはあるがディスク上に実ファイルが存在しない「古いゴミデータ」を削除しクリーンナップする
 void DatabaseManager::cleanupStaleEntries() {
     auto images = getAllImages();
     beginTransaction();

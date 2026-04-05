@@ -2,6 +2,8 @@
 #include <opencv2/imgproc.hpp>
 #include <bit> // C++20 std::popcount
 
+// 画像の輝度勾配（隣り合うピクセルの明暗）からハッシュを計算する(Difference Hash)
+// 処理が軽く、単純なリサイズ等に強い特徴がある
 uint64_t ImageHasher::calculateDHash(const cv::Mat& image) {
     if (image.empty()) return 0;
 
@@ -21,6 +23,8 @@ uint64_t ImageHasher::calculateDHash(const cv::Mat& image) {
     return hash;
 }
 
+// 画像の低周波成分（全体的な形状やぼんやりとした特徴）からハッシュを計算する(Perceptual Hash)
+// 多少の色調変化やノイズに対してよりロバスト（堅牢）な特徴がある
 uint64_t ImageHasher::calculatePHash(const cv::Mat& image) {
     if (image.empty()) return 0;
 
@@ -54,6 +58,7 @@ uint64_t ImageHasher::calculatePHash(const cv::Mat& image) {
     return hash;
 }
 
+// ハミング距離を計算する (std::popcount でハードウェア命令を使い高速化)
 int ImageHasher::hammingDistance(uint64_t h1, uint64_t h2) {
     return static_cast<int>(std::popcount(h1 ^ h2));
 }
