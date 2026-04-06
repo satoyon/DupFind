@@ -174,7 +174,7 @@ void MainWindow::loadSettings() {
   QString iniPath = QCoreApplication::applicationDirPath() + "/DupFind.ini";
   QSettings settings(iniPath, QSettings::IniFormat);
 
-  m_currentThreshold = settings.value("threshold", 10).toInt();
+  m_currentThreshold = settings.value("threshold", 5).toInt();
   m_strictMode = settings.value("strict_mode", false).toBool();
   m_loadedDirs = settings.value("directories").toStringList();
 }
@@ -203,6 +203,7 @@ void MainWindow::onAddDirectory() {
       QFileDialog::getExistingDirectory(this, "Select Directory to Scan");
   if (!dir.isEmpty()) {
     m_dirList->addItem(dir);
+    saveSettings();
   }
 }
 
@@ -214,6 +215,7 @@ void MainWindow::onRemoveDirectory() {
     delete item;
     // キャッシュ再読み込み
     m_lastScannedImages = getFilteredImages();
+    saveSettings();
   }
 }
 
@@ -325,6 +327,9 @@ void MainWindow::onThresholdChanged(int value) {
   m_currentThreshold = value;
   m_thresholdLabel->setText(QString::number(value));
 
+  // フリーズして強制終了しても次回起動時に閾値が復元されるように保存
+  saveSettings();
+
   // 操作が止まるまで待機（デバウンス）
   m_searchTimer->start();
 }
@@ -373,7 +378,7 @@ void MainWindow::onSearchFinished() {
 
 void MainWindow::removeGroupFromView(int groupId) {
   if (groupId >= 0 && groupId < static_cast<int>(m_currentGroups.size())) {
-    for (const auto& img : m_currentGroups[groupId].images) {
+    for (const auto &img : m_currentGroups[groupId].images) {
       m_ignoredPaths.insert(img.path);
     }
     m_lastScannedImages = getFilteredImages();
@@ -411,7 +416,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
       QAction *copyAction = menu.addAction("Copy Full Path(&C)");
       menu.addSeparator();
       QAction *removeAction = menu.addAction("Remove from List(&R)");
-      
+
       QAction *selectedAction = menu.exec(ce->globalPos());
       if (selectedAction == copyAction) {
         QApplication::clipboard()->setText(path);
@@ -426,11 +431,12 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
 }
 
 // 同一・類似と判定された画像のグループを受け取り、UI上のグリッドレイアウトへ動的にサムネイルと削除候補のチェックボックスを描画する
-void MainWindow::updateResultGrid(const std::vector<DuplicateGroup> &groups, bool preserveState) {
+void MainWindow::updateResultGrid(const std::vector<DuplicateGroup> &groups,
+                                  bool preserveState) {
   // 状態の保存
   std::unordered_map<std::string, bool> previousState;
   if (preserveState) {
-    for (const auto& item : m_resultItems) {
+    for (const auto &item : m_resultItems) {
       if (item.checkbox) {
         previousState[item.path] = item.checkbox->isChecked();
       }
@@ -477,7 +483,8 @@ void MainWindow::updateResultGrid(const std::vector<DuplicateGroup> &groups, boo
       thumb->setProperty("filePath", QString::fromStdString(imgData.path));
       thumb->setProperty("groupId", groupId);
       thumb->installEventFilter(this);
-      thumb->setToolTip("Double click to open\nRight click to copy path or remove from list");
+      thumb->setToolTip(
+          "Double click to open\nRight click to copy path or remove from list");
 
       thumb->setText("Loading...");
       thumb->setAlignment(Qt::AlignCenter);
@@ -515,7 +522,8 @@ void MainWindow::updateResultGrid(const std::vector<DuplicateGroup> &groups, boo
         }
         return QImage();
       }).then(this, [safeThumb](QImage img) {
-        if (!safeThumb) return; // 既にUIがクリアされている場合は何もしない
+        if (!safeThumb)
+          return; // 既にUIがクリアされている場合は何もしない
 
         if (!img.isNull()) {
           QPixmap pix = QPixmap::fromImage(img);
@@ -528,7 +536,8 @@ void MainWindow::updateResultGrid(const std::vector<DuplicateGroup> &groups, boo
 
       // 自動チェック: 残す1枚（bestImage）以外を削除候補としてチェックする
       QCheckBox *cb = new QCheckBox("Delete candidate");
-      if (preserveState && previousState.find(imgData.path) != previousState.end()) {
+      if (preserveState &&
+          previousState.find(imgData.path) != previousState.end()) {
         cb->setChecked(previousState[imgData.path]);
       } else {
         if (&imgData != bestImage) {
@@ -630,8 +639,8 @@ void MainWindow::onDeleteSelected() {
 
     // リストをリフレッシュ
     auto images = getFilteredImages();
-    m_currentGroups = SimilaritySearch::findDuplicates(images, m_currentThreshold,
-                                                   m_strictMode);
+    m_currentGroups = SimilaritySearch::findDuplicates(
+        images, m_currentThreshold, m_strictMode);
     updateResultGrid(m_currentGroups);
   }
 }

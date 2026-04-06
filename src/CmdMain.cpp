@@ -120,7 +120,8 @@ void cmdAdd(const QStringList &dirs) {
   QProcess::startDetached(program, workerArgs);
 }
 
-// バックグラウンドで画像ファイルのハッシュ値(dHash, pHash)を計算し、DBへ書き込む処理
+// バックグラウンドで画像ファイルのハッシュ値(dHash,
+// pHash)を計算し、DBへ書き込む処理
 // GUI動作との競合を避ける配慮などが実装されている
 void workerAdd(const QStringList &dirs) {
   // バックグラウンド処理のためCPU優先度を下げる
@@ -214,7 +215,7 @@ void cmdSearch(const QString &imageFile) {
 
   QString iniPath = QCoreApplication::applicationDirPath() + "/DupFind.ini";
   QSettings settings(iniPath, QSettings::IniFormat);
-  int threshold = settings.value("threshold", 10).toInt();
+  int threshold = settings.value("threshold", 5).toInt();
   bool strict = settings.value("strict_mode", false).toBool();
 
   DatabaseManager dbManager("dupfind_cache.db");

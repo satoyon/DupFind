@@ -76,7 +76,7 @@ private:
   QSlider *m_thresholdSlider;  // ハミング距離しきい値の設定スライダー
   QLabel *m_thresholdLabel;    // しきい値の現在数値ラベル
   QCheckBox *m_strictCheckBox; // pHash, dHash両方を厳密チェックするか
-  int m_currentThreshold = 10;
+  int m_currentThreshold = 5;
   bool m_strictMode = false;
 
   // 非同期（バックグラウンド）処理用オブジェクト
