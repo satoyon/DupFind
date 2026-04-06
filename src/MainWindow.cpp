@@ -18,6 +18,7 @@
 #include <QDesktopServices>
 #include <QImageReader>
 #include <QMenu>
+#include <QPointer>
 #include <QSettings>
 #include <QUrl>
 #include <QtConcurrent>
@@ -478,43 +479,52 @@ void MainWindow::updateResultGrid(const std::vector<DuplicateGroup> &groups, boo
       thumb->installEventFilter(this);
       thumb->setToolTip("Double click to open\nRight click to copy path or remove from list");
 
-      QImageReader reader(QString::fromStdString(imgData.path));
-      reader.setAutoTransform(true);
-      reader.setAllocationLimit(512); // デフォルト128MB制限を512MBに引き上げ
-
-      QSize imgSize = reader.size();
-      if (imgSize.isValid()) {
-        // サムネイル表示に必要なサイズ（高階調な表示のためここでは高めでもよいが、150x150枠）に
-        // デコード段階で縮小指定する。JPEG等では飛躍的に高速化・省メモリ化される。
-        imgSize.scale(300, 300, Qt::KeepAspectRatio);
-        reader.setScaledSize(imgSize);
-      }
-
-      QImage img = reader.read();
-      QPixmap pix;
-      if (!img.isNull()) {
-        pix = QPixmap::fromImage(img);
-      } else {
-        // Qtの標準ImageReaderで読み込めない形式(WebPプラギン未導入時など)のフォールバック
-        cv::Mat cvImg = ImageHasher::loadImage(imgData.path, 300);
-        if (!cvImg.empty()) {
-          cv::Mat rgb;
-          cv::cvtColor(cvImg, rgb, cv::COLOR_BGR2RGB);
-          QImage qimg(rgb.data, rgb.cols, rgb.rows, rgb.step,
-                      QImage::Format_RGB888);
-          pix = QPixmap::fromImage(
-              qimg.copy()); // OpenCVのMatデータ揮発を防ぐためcopy()
-        }
-      }
-
-      if (!pix.isNull()) {
-        thumb->setPixmap(pix.scaled(150, 150, Qt::KeepAspectRatio,
-                                    Qt::SmoothTransformation));
-      } else {
-        thumb->setText("Error Loading");
-      }
+      thumb->setText("Loading...");
       thumb->setAlignment(Qt::AlignCenter);
       vBox->addWidget(thumb);
+
+      QPointer<QLabel> safeThumb(thumb);
+      std::string pathCopy = imgData.path;
+
+      QtConcurrent::run([pathCopy]() -> QImage {
+        QImageReader reader(QString::fromStdString(pathCopy));
+        reader.setAutoTransform(true);
+        reader.setAllocationLimit(512); // デフォルト128MB制限を512MBに引き上げ
+
+        QSize imgSize = reader.size();
+        if (imgSize.isValid()) {
+          // サムネイル表示に必要なサイズ（高階調な表示のためここでは高めでもよいが、150x150枠）に
+          // デコード段階で縮小指定する。JPEG等では飛躍的に高速化・省メモリ化される。
+          imgSize.scale(300, 300, Qt::KeepAspectRatio);
+          reader.setScaledSize(imgSize);
+        }
+
+        QImage img = reader.read();
+        if (!img.isNull()) {
+          return img;
+        } else {
+          // Qtの標準ImageReaderで読み込めない形式(WebPプラギン未導入時など)のフォールバック
+          cv::Mat cvImg = ImageHasher::loadImage(pathCopy, 300);
+          if (!cvImg.empty()) {
+            cv::Mat rgb;
+            cv::cvtColor(cvImg, rgb, cv::COLOR_BGR2RGB);
+            QImage qimg(rgb.data, rgb.cols, rgb.rows, rgb.step,
+                        QImage::Format_RGB888);
+            return qimg.copy(); // OpenCVのMatデータ揮発を防ぐためcopy()
+          }
+        }
+        return QImage();
+      }).then(this, [safeThumb](QImage img) {
+        if (!safeThumb) return; // 既にUIがクリアされている場合は何もしない
+
+        if (!img.isNull()) {
+          QPixmap pix = QPixmap::fromImage(img);
+          safeThumb->setPixmap(pix.scaled(150, 150, Qt::KeepAspectRatio,
+                                          Qt::SmoothTransformation));
+        } else {
+          safeThumb->setText("Error Loading");
+        }
+      });
 
       // 自動チェック: 残す1枚（bestImage）以外を削除候補としてチェックする
       QCheckBox *cb = new QCheckBox("Delete candidate");

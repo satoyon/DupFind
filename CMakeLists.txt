@@ -53,7 +53,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE DupFindCore)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     WIN32_EXECUTABLE ON
-#    MACOSX_BUNDLE ON
+    MACOSX_BUNDLE ON
 )
 
 # CLI target
