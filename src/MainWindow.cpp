@@ -3,6 +3,7 @@
 #include <QDirIterator>
 #include <QFile>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QPixmap>
@@ -124,7 +125,11 @@ void MainWindow::setupUi() {
   // Directory List
   m_dirList = new QListWidget();
   m_dirList->setMaximumWidth(250);
-  m_dirList->addItems(m_loadedDirs); // ここで復元
+  //  m_dirList->addItems(m_loadedDirs); // ここで復元
+  for (const QString &dir : m_loadedDirs) {
+    auto *item = new QListWidgetItem(dir, m_dirList);
+    item->setToolTip(dir);
+  }
   splitLayout->addWidget(m_dirList);
 
   // Results Scroll Area
@@ -202,7 +207,8 @@ void MainWindow::onAddDirectory() {
   QString dir =
       QFileDialog::getExistingDirectory(this, "Select Directory to Scan");
   if (!dir.isEmpty()) {
-    m_dirList->addItem(dir);
+    auto *item = new QListWidgetItem(dir, m_dirList);
+    item->setToolTip(dir);
     saveSettings();
   }
 }
@@ -483,8 +489,11 @@ void MainWindow::updateResultGrid(const std::vector<DuplicateGroup> &groups,
       thumb->setProperty("filePath", QString::fromStdString(imgData.path));
       thumb->setProperty("groupId", groupId);
       thumb->installEventFilter(this);
-      thumb->setToolTip(
-          "Double click to open\nRight click to copy path or remove from list");
+      //      thumb->setToolTip(
+      //          "Double click to open\nRight click to copy path or remove from
+      //          list");
+      QFileInfo fileInfo(QString::fromStdString(imgData.path));
+      thumb->setToolTip(fileInfo.baseName());
 
       thumb->setText("Loading...");
       thumb->setAlignment(Qt::AlignCenter);
