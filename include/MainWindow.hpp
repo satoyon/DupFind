@@ -1,19 +1,19 @@
 #pragma once
 #include "DatabaseManager.hpp"
-#include "SimilaritySearch.hpp"
+#include "ResultListModel.hpp"
+#include "ResultItemDelegate.hpp"
 #include <unordered_set>
 #include <QCheckBox>
 #include <QCloseEvent>
 #include <QEvent>
 #include <QFutureWatcher>
-#include <QGridLayout>
 #include <QLabel>
+#include <QListView>
 #include <QListWidget>
 #include <QMainWindow>
 #include <QObject>
 #include <QProgressBar>
 #include <QPushButton>
-#include <QScrollArea>
 #include <QSlider>
 #include <QTimer>
 #include <memory>
@@ -40,6 +40,8 @@ private slots:
   void onSearchFinished();            // 類似画像の検索完了時
   void onClearResults();              // 結果表示のクリア
   void removeGroupFromView(int groupId); // 指定したグループをリストから除外
+  void onContextMenuRequested(const std::string& path, int groupId, const QPoint& globalPos);
+  void onFileDoubleClicked(const std::string& path);
 
 private:
   // 内部処理・初期化メソッド
@@ -66,9 +68,7 @@ private:
   QPushButton *m_startScanBtn;
   QPushButton *m_deselectBtn;  // チェック状態を全クリアするボタン
   QProgressBar *m_progressBar; // スキャン・検索時のプログレスバー
-  QScrollArea *m_scrollArea;   // 検索結果表示用スクロールエリア
-  QWidget *m_resultWidget;
-  QGridLayout *m_resultLayout; // 検索結果をグリッドで配置するレイアウト
+  QListView *m_resultView;     // 検索結果表示用リストビュー
   QPushButton *m_deleteBtn;
   QPushButton *m_clearBtn;
 
@@ -78,6 +78,9 @@ private:
   QCheckBox *m_strictCheckBox; // pHash, dHash両方を厳密チェックするか
   int m_currentThreshold = 5;
   bool m_strictMode = false;
+
+  ResultListModel *m_model;
+  ResultItemDelegate *m_delegate;
 
   // 非同期（バックグラウンド）処理用オブジェクト
   QFutureWatcher<void> *m_scanWatcher; // 画像スキャンの進捗監視
@@ -91,14 +94,6 @@ private:
       m_lastScannedImages;  // 各ディレクトリから抽出した画像キャッシュ
   QStringList m_loadedDirs; // 起動時にロードされたディレクトリ群
 
-  // 結果画面に追加された画像とチェックボックスを管理する構造体
-  struct ResultItem {
-    QCheckBox *checkbox; // 削除対象としてマークするチェックボックス
-    std::string path;    // チェックボックスに紐づく画像パス
-    int groupId;         // 属する重複グループのID（全削除警告用）
-  };
-  std::vector<ResultItem>
-      m_resultItems; // 現在表示されている結果アイテムのリスト
   std::vector<DuplicateGroup> m_currentGroups; // 現在表示中のグループ一覧
   std::unordered_set<std::string> m_ignoredPaths; // セッション中に除外した画像のパス
 };

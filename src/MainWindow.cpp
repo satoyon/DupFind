@@ -132,13 +132,17 @@ void MainWindow::setupUi() {
   }
   splitLayout->addWidget(m_dirList);
 
-  // Results Scroll Area
-  m_scrollArea = new QScrollArea();
-  m_scrollArea->setWidgetResizable(true);
-  m_resultWidget = new QWidget();
-  m_resultLayout = new QGridLayout(m_resultWidget);
-  m_scrollArea->setWidget(m_resultWidget);
-  splitLayout->addWidget(m_scrollArea);
+  // Results List View
+  m_resultView = new QListView();
+  m_model = new ResultListModel(this);
+  m_delegate = new ResultItemDelegate(this);
+  
+  m_resultView->setModel(m_model);
+  m_resultView->setItemDelegate(m_delegate);
+  m_resultView->setSelectionMode(QAbstractItemView::NoSelection);
+  m_resultView->setSpacing(5);
+  
+  splitLayout->addWidget(m_resultView);
 
   mainLayout->addLayout(splitLayout);
 
@@ -159,10 +163,7 @@ void MainWindow::setupUi() {
   connect(m_clearBtn, &QPushButton::clicked, this, &MainWindow::onClearResults);
 
   connect(m_deselectBtn, &QPushButton::clicked, this, [this]() {
-    for (auto &item : m_resultItems) {
-      if (item.checkbox)
-        item.checkbox->setChecked(false);
-    }
+    m_model->clearAllChecks();
   });
 
   connect(m_deleteBtn, &QPushButton::clicked, this,
@@ -173,6 +174,11 @@ void MainWindow::setupUi() {
           &MainWindow::onStrictChanged);
   connect(m_scanWatcher, &QFutureWatcher<void>::finished, this,
           &MainWindow::onScanFinished);
+
+  connect(m_delegate, &ResultItemDelegate::contextMenuRequested, this,
+          &MainWindow::onContextMenuRequested);
+  connect(m_delegate, &ResultItemDelegate::fileDoubleClicked, this,
+          &MainWindow::onFileDoubleClicked);
 }
 
 void MainWindow::loadSettings() {
@@ -394,192 +400,39 @@ void MainWindow::removeGroupFromView(int groupId) {
 }
 
 void MainWindow::onClearResults() {
-  // UIをクリア
-  QLayoutItem *child;
-  while ((child = m_resultLayout->takeAt(0)) != nullptr) {
-    if (child->widget())
-      delete child->widget();
-    delete child;
-  }
-  for (int i = 0; i < m_resultLayout->rowCount(); ++i) {
-    m_resultLayout->setRowStretch(i, 0);
-  }
-  m_resultItems.clear();
+  m_model->clear();
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
-  if (event->type() == QEvent::MouseButtonDblClick) {
-    QString path = obj->property("filePath").toString();
-    if (!path.isEmpty()) {
-      QDesktopServices::openUrl(QUrl::fromLocalFile(path));
-      return true;
-    }
-  } else if (event->type() == QEvent::ContextMenu) {
-    QString path = obj->property("filePath").toString();
-    if (!path.isEmpty()) {
-      QContextMenuEvent *ce = static_cast<QContextMenuEvent *>(event);
-      QMenu menu;
-      QAction *copyAction = menu.addAction("Copy Full Path(&C)");
-      menu.addSeparator();
-      QAction *removeAction = menu.addAction("Remove from List(&R)");
+  return QMainWindow::eventFilter(obj, event);
+}
 
-      QAction *selectedAction = menu.exec(ce->globalPos());
-      if (selectedAction == copyAction) {
-        QApplication::clipboard()->setText(path);
-      } else if (selectedAction == removeAction) {
-        int groupId = obj->property("groupId").toInt();
-        removeGroupFromView(groupId);
-      }
-      return true;
+void MainWindow::onFileDoubleClicked(const std::string& path) {
+  if (!path.empty()) {
+    QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdString(path)));
+  }
+}
+
+void MainWindow::onContextMenuRequested(const std::string& path, int groupId, const QPoint& globalPos) {
+  if (!path.empty()) {
+    QMenu menu;
+    QAction *copyAction = menu.addAction("Copy Full Path(&C)");
+    menu.addSeparator();
+    QAction *removeAction = menu.addAction("Remove from List(&R)");
+
+    QAction *selectedAction = menu.exec(globalPos);
+    if (selectedAction == copyAction) {
+      QApplication::clipboard()->setText(QString::fromStdString(path));
+    } else if (selectedAction == removeAction) {
+      removeGroupFromView(groupId);
     }
   }
-  return QMainWindow::eventFilter(obj, event);
 }
 
 // 同一・類似と判定された画像のグループを受け取り、UI上のグリッドレイアウトへ動的にサムネイルと削除候補のチェックボックスを描画する
 void MainWindow::updateResultGrid(const std::vector<DuplicateGroup> &groups,
                                   bool preserveState) {
-  // 状態の保存
-  std::unordered_map<std::string, bool> previousState;
-  if (preserveState) {
-    for (const auto &item : m_resultItems) {
-      if (item.checkbox) {
-        previousState[item.path] = item.checkbox->isChecked();
-      }
-    }
-  }
-
-  // UIをクリア
-  QLayoutItem *child;
-  while ((child = m_resultLayout->takeAt(0)) != nullptr) {
-    if (child->widget())
-      delete child->widget();
-    delete child;
-  }
-  for (int i = 0; i < m_resultLayout->rowCount(); ++i) {
-    m_resultLayout->setRowStretch(i, 0);
-  }
-  m_resultItems.clear();
-
-  int row = 0;
-  int groupId = 0;
-  for (const auto &group : groups) {
-    // グループ内で残す1枚（ファイルサイズが最大のもの。同サイズなら最初の1枚）を特定する
-    const ImageData *bestImage = &group.images[0];
-    for (size_t i = 1; i < group.images.size(); ++i) {
-      if (group.images[i].file_size > bestImage->file_size) {
-        bestImage = &group.images[i];
-      }
-    }
-
-    // グループヘッダー
-    QLabel *groupLabel = new QLabel(
-        QString("Duplicate Group - %1 images").arg(group.images.size()));
-    groupLabel->setStyleSheet("font-weight: bold; background-color: #f0f0f0; "
-                              "padding: 5px; border-radius: 4px;");
-    m_resultLayout->addWidget(groupLabel, row++, 0, 1, 4);
-
-    int col = 0;
-    for (const auto &imgData : group.images) {
-      QWidget *imgWidget = new QWidget();
-      imgWidget->setObjectName("imgCard");
-      QVBoxLayout *vBox = new QVBoxLayout(imgWidget);
-
-      QLabel *thumb = new QLabel();
-      thumb->setProperty("filePath", QString::fromStdString(imgData.path));
-      thumb->setProperty("groupId", groupId);
-      thumb->installEventFilter(this);
-      //      thumb->setToolTip(
-      //          "Double click to open\nRight click to copy path or remove from
-      //          list");
-      QFileInfo fileInfo(QString::fromStdString(imgData.path));
-      thumb->setToolTip(fileInfo.baseName());
-
-      thumb->setText("Loading...");
-      thumb->setAlignment(Qt::AlignCenter);
-      vBox->addWidget(thumb);
-
-      QPointer<QLabel> safeThumb(thumb);
-      std::string pathCopy = imgData.path;
-
-      QtConcurrent::run([pathCopy]() -> QImage {
-        QImageReader reader(QString::fromStdString(pathCopy));
-        reader.setAutoTransform(true);
-        reader.setAllocationLimit(512); // デフォルト128MB制限を512MBに引き上げ
-
-        QSize imgSize = reader.size();
-        if (imgSize.isValid()) {
-          // サムネイル表示に必要なサイズ（高階調な表示のためここでは高めでもよいが、150x150枠）に
-          // デコード段階で縮小指定する。JPEG等では飛躍的に高速化・省メモリ化される。
-          imgSize.scale(300, 300, Qt::KeepAspectRatio);
-          reader.setScaledSize(imgSize);
-        }
-
-        QImage img = reader.read();
-        if (!img.isNull()) {
-          return img;
-        } else {
-          // Qtの標準ImageReaderで読み込めない形式(WebPプラギン未導入時など)のフォールバック
-          cv::Mat cvImg = ImageHasher::loadImage(pathCopy, 300);
-          if (!cvImg.empty()) {
-            cv::Mat rgb;
-            cv::cvtColor(cvImg, rgb, cv::COLOR_BGR2RGB);
-            QImage qimg(rgb.data, rgb.cols, rgb.rows, rgb.step,
-                        QImage::Format_RGB888);
-            return qimg.copy(); // OpenCVのMatデータ揮発を防ぐためcopy()
-          }
-        }
-        return QImage();
-      }).then(this, [safeThumb](QImage img) {
-        if (!safeThumb)
-          return; // 既にUIがクリアされている場合は何もしない
-
-        if (!img.isNull()) {
-          QPixmap pix = QPixmap::fromImage(img);
-          safeThumb->setPixmap(pix.scaled(150, 150, Qt::KeepAspectRatio,
-                                          Qt::SmoothTransformation));
-        } else {
-          safeThumb->setText("Error Loading");
-        }
-      });
-
-      // 自動チェック: 残す1枚（bestImage）以外を削除候補としてチェックする
-      QCheckBox *cb = new QCheckBox("Delete candidate");
-      if (preserveState &&
-          previousState.find(imgData.path) != previousState.end()) {
-        cb->setChecked(previousState[imgData.path]);
-      } else {
-        if (&imgData != bestImage) {
-          cb->setChecked(true);
-        }
-      }
-      vBox->addWidget(cb);
-
-      QLabel *infoLabel =
-          new QLabel(QString("%1 KB\n%2")
-                         .arg(imgData.file_size / 1024)
-                         .arg(QString::fromStdString(imgData.path)));
-      infoLabel->setWordWrap(true);
-      infoLabel->setMaximumWidth(150);
-      infoLabel->setStyleSheet("font-size: 10px; color: #666;");
-      vBox->addWidget(infoLabel);
-
-      m_resultLayout->addWidget(imgWidget, row, col);
-      m_resultItems.push_back({cb, imgData.path, groupId});
-
-      col++;
-      if (col >= 4) {
-        col = 0;
-        row++;
-      }
-    }
-    row++;
-    groupId++;
-  }
-
-  // 項目数が少ない時に各行が縦に間延びする（ヘッダーが極端に太くなる）のを防ぐため、
-  // 最後の空行に対して余った縦スペースをすべて吸収させる
-  m_resultLayout->setRowStretch(row, 1);
+  m_model->setGroups(groups, preserveState);
 }
 
 void MainWindow::onDeleteSelected() {
@@ -587,12 +440,19 @@ void MainWindow::onDeleteSelected() {
   std::map<int, int> groupTotalCount;
   std::map<int, int> groupCheckedCount;
 
-  for (const auto &item : m_resultItems) {
-    groupTotalCount[item.groupId]++;
-    if (item.checkbox->isChecked()) {
-      groupCheckedCount[item.groupId]++;
-      count++;
-    }
+  const auto& checkStates = m_model->getCheckStates();
+
+  int groupId = 0;
+  for (const auto& group : m_currentGroups) {
+      for (const auto& img : group.images) {
+          groupTotalCount[groupId]++;
+          auto it = checkStates.find(img.path);
+          if (it != checkStates.end() && it->second) {
+              groupCheckedCount[groupId]++;
+              count++;
+          }
+      }
+      groupId++;
   }
 
   if (count == 0)
@@ -600,7 +460,7 @@ void MainWindow::onDeleteSelected() {
 
   bool allCheckedInSomeGroup = false;
   for (auto const &[gId, total] : groupTotalCount) {
-    if (groupCheckedCount[gId] == total) {
+    if (groupCheckedCount[gId] == total && total > 0) {
       allCheckedInSomeGroup = true;
       break;
     }
@@ -625,16 +485,15 @@ void MainWindow::onDeleteSelected() {
 
   if (res == QMessageBox::Yes) {
     std::vector<QString> failures;
-    for (const auto &item : m_resultItems) {
-      if (item.checkbox->isChecked()) {
-        QString qPath = QString::fromStdString(item.path);
-        // QFile::moveToTrash は Qt 5.15+ で利用可能
-        if (QFile::moveToTrash(qPath)) {
-          m_dbManager->removeImage(item.path);
-        } else {
-          failures.push_back(qPath);
+    for (const auto& pair : checkStates) {
+        if (pair.second) { // is checked
+            QString qPath = QString::fromStdString(pair.first);
+            if (QFile::moveToTrash(qPath)) {
+                m_dbManager->removeImage(pair.first);
+            } else {
+                failures.push_back(qPath);
+            }
         }
-      }
     }
 
     if (!failures.empty()) {
