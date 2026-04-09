@@ -1,10 +1,10 @@
 #include "ResultItemDelegate.hpp"
 #include "ResultListModel.hpp"
 #include <QApplication>
+#include <QFileInfo>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QToolTip>
-#include <QfileInfo>
 #include <cstddef>
 
 ResultItemDelegate::ResultItemDelegate(QObject *parent)
