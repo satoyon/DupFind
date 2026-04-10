@@ -1,5 +1,6 @@
 #include "ResultItemDelegate.hpp"
 #include "ResultListModel.hpp"
+#include <QAbstractItemView>
 #include <QApplication>
 #include <QFileInfo>
 #include <QMouseEvent>
@@ -183,7 +184,7 @@ bool ResultItemDelegate::helpEvent(QHelpEvent *event, QAbstractItemView *view,
       if (cardRect.contains(event->pos())) {
         QFileInfo fileInfo(QString::fromStdString(imgData.path));
         QString toolTip = fileInfo.fileName();
-        QToolTip::showText(event->globalPos(), toolTip, nullptr, cardRect);
+        QToolTip::showText(event->globalPos(), toolTip, view, cardRect);
         return true;
       }
     }
