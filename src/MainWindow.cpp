@@ -477,20 +477,34 @@ void MainWindow::updateResultGrid(const std::vector<DuplicateGroup> &groups,
 }
 
 void MainWindow::onDeleteSelected() {
+  std::unordered_set<int> visibleGroupIds;
+  for (int i = 0; i < m_proxyModel->rowCount(); ++i) {
+    QModelIndex proxyIndex = m_proxyModel->index(i, 0);
+    QModelIndex sourceIndex = m_proxyModel->mapToSource(proxyIndex);
+    const auto& item = m_model->getItem(sourceIndex.row());
+    if (item.type == ResultListItem::Header) {
+        visibleGroupIds.insert(item.groupId);
+    }
+  }
+
   int count = 0;
   std::map<int, int> groupTotalCount;
   std::map<int, int> groupCheckedCount;
+  std::vector<std::string> pathsToDelete;
 
   const auto& checkStates = m_model->getCheckStates();
 
   int groupId = 0;
   for (const auto& group : m_currentGroups) {
-      for (const auto& img : group.images) {
-          groupTotalCount[groupId]++;
-          auto it = checkStates.find(img.path);
-          if (it != checkStates.end() && it->second) {
-              groupCheckedCount[groupId]++;
-              count++;
+      if (visibleGroupIds.find(groupId) != visibleGroupIds.end()) {
+          for (const auto& img : group.images) {
+              groupTotalCount[groupId]++;
+              auto it = checkStates.find(img.path);
+              if (it != checkStates.end() && it->second) {
+                  groupCheckedCount[groupId]++;
+                  count++;
+                  pathsToDelete.push_back(img.path);
+              }
           }
       }
       groupId++;
@@ -526,14 +540,12 @@ void MainWindow::onDeleteSelected() {
 
   if (res == QMessageBox::Yes) {
     std::vector<QString> failures;
-    for (const auto& pair : checkStates) {
-        if (pair.second) { // is checked
-            QString qPath = QString::fromStdString(pair.first);
-            if (QFile::moveToTrash(qPath)) {
-                m_dbManager->removeImage(pair.first);
-            } else {
-                failures.push_back(qPath);
-            }
+    for (const auto& path : pathsToDelete) {
+        QString qPath = QString::fromStdString(path);
+        if (QFile::moveToTrash(qPath)) {
+            m_dbManager->removeImage(path);
+        } else {
+            failures.push_back(qPath);
         }
     }
 
