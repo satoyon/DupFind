@@ -2,6 +2,8 @@
 #include "DatabaseManager.hpp"
 #include "ResultListModel.hpp"
 #include "ResultItemDelegate.hpp"
+#include "ResultFilterProxyModel.hpp"
+#include <QLineEdit>
 #include <unordered_set>
 #include <QCheckBox>
 #include <QCloseEvent>
@@ -42,6 +44,7 @@ private slots:
   void removeGroupFromView(int groupId); // 指定したグループをリストから除外
   void onContextMenuRequested(const std::string& path, int groupId, const QPoint& globalPos);
   void onFileDoubleClicked(const std::string& path);
+  void onSearchTextChanged(const QString &text);
 
 private:
   // 内部処理・初期化メソッド
@@ -81,6 +84,8 @@ private:
 
   ResultListModel *m_model;
   ResultItemDelegate *m_delegate;
+  ResultFilterProxyModel *m_proxyModel;
+  QLineEdit *m_searchBox;
 
   // 非同期（バックグラウンド）処理用オブジェクト
   QFutureWatcher<void> *m_scanWatcher; // 画像スキャンの進捗監視

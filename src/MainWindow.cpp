@@ -132,17 +132,30 @@ void MainWindow::setupUi() {
   }
   splitLayout->addWidget(m_dirList);
 
+  // Results section (Search box + List View)
+  auto *resultLayout = new QVBoxLayout();
+  m_searchBox = new QLineEdit();
+  m_searchBox->setPlaceholderText("Filter results by path or filename... (Press Esc to close)");
+  m_searchBox->setVisible(false);
+  resultLayout->addWidget(m_searchBox);
+
   // Results List View
   m_resultView = new QListView();
   m_model = new ResultListModel(this);
+  m_proxyModel = new ResultFilterProxyModel(this);
+  m_proxyModel->setSourceModel(m_model);
   m_delegate = new ResultItemDelegate(this);
   
-  m_resultView->setModel(m_model);
+  m_resultView->setModel(m_proxyModel);
   m_resultView->setItemDelegate(m_delegate);
   m_resultView->setSelectionMode(QAbstractItemView::NoSelection);
   m_resultView->setSpacing(5);
   
-  splitLayout->addWidget(m_resultView);
+  m_resultView->installEventFilter(this);
+  m_searchBox->installEventFilter(this);
+  
+  resultLayout->addWidget(m_resultView);
+  splitLayout->addLayout(resultLayout);
 
   mainLayout->addLayout(splitLayout);
 
@@ -160,6 +173,7 @@ void MainWindow::setupUi() {
           &MainWindow::onRemoveDirectory);
   connect(m_startScanBtn, &QPushButton::clicked, this,
           &MainWindow::onStartScan);
+  connect(m_searchBox, &QLineEdit::textChanged, this, &MainWindow::onSearchTextChanged);
   connect(m_clearBtn, &QPushButton::clicked, this, &MainWindow::onClearResults);
 
   connect(m_deselectBtn, &QPushButton::clicked, this, [this]() {
@@ -404,7 +418,34 @@ void MainWindow::onClearResults() {
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
+  if (event->type() == QEvent::KeyPress) {
+    QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+    if (obj == m_resultView) {
+      if ((keyEvent->modifiers() & Qt::ControlModifier) && keyEvent->key() == Qt::Key_F) {
+        m_searchBox->setVisible(true);
+        m_searchBox->setFocus();
+        return true;
+      } else if (keyEvent->key() == Qt::Key_F && keyEvent->modifiers() == Qt::NoModifier) {
+        m_searchBox->setVisible(true);
+        m_searchBox->setFocus();
+        return true;
+      }
+    } else if (obj == m_searchBox) {
+      if (keyEvent->key() == Qt::Key_Escape) {
+        m_searchBox->clear();
+        m_searchBox->setVisible(false);
+        m_resultView->setFocus();
+        return true;
+      }
+    }
+  }
   return QMainWindow::eventFilter(obj, event);
+}
+
+void MainWindow::onSearchTextChanged(const QString &text) {
+  if (m_proxyModel) {
+    m_proxyModel->setSearchText(text);
+  }
 }
 
 void MainWindow::onFileDoubleClicked(const std::string& path) {

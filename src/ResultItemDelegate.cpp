@@ -5,8 +5,27 @@
 #include <QFileInfo>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QSortFilterProxyModel>
 #include <QToolTip>
 #include <cstddef>
+
+static const ResultListModel* getSourceModelAndIndex(const QModelIndex &index, QModelIndex &sourceIndex) {
+    if (auto proxy = qobject_cast<const QSortFilterProxyModel*>(index.model())) {
+        sourceIndex = proxy->mapToSource(index);
+        return qobject_cast<const ResultListModel*>(sourceIndex.model());
+    }
+    sourceIndex = index;
+    return qobject_cast<const ResultListModel*>(index.model());
+}
+
+static ResultListModel* getSourceModelAndIndex(QAbstractItemModel *model, const QModelIndex &index, QModelIndex &sourceIndex) {
+    if (auto proxy = qobject_cast<QSortFilterProxyModel*>(model)) {
+        sourceIndex = proxy->mapToSource(index);
+        return qobject_cast<ResultListModel*>(proxy->sourceModel());
+    }
+    sourceIndex = index;
+    return qobject_cast<ResultListModel*>(model);
+}
 
 ResultItemDelegate::ResultItemDelegate(QObject *parent)
     : QStyledItemDelegate(parent) {}
@@ -14,13 +33,14 @@ ResultItemDelegate::ResultItemDelegate(QObject *parent)
 void ResultItemDelegate::paint(QPainter *painter,
                                const QStyleOptionViewItem &option,
                                const QModelIndex &index) const {
-  const auto *model = qobject_cast<const ResultListModel *>(index.model());
+  QModelIndex sourceIndex;
+  const auto *model = getSourceModelAndIndex(index, sourceIndex);
   if (!model)
     return;
 
   painter->save();
 
-  const auto &item = model->getItem(index.row());
+  const auto &item = model->getItem(sourceIndex.row());
   if (item.type == ResultListItem::Header) {
     QRect r = option.rect;
     r.adjust(0, 5, 0, -5);
@@ -92,10 +112,11 @@ void ResultItemDelegate::paint(QPainter *painter,
 
 QSize ResultItemDelegate::sizeHint(const QStyleOptionViewItem &option,
                                    const QModelIndex &index) const {
-  const auto *model = qobject_cast<const ResultListModel *>(index.model());
+  QModelIndex sourceIndex;
+  const auto *model = getSourceModelAndIndex(index, sourceIndex);
   if (!model)
     return QSize(0, 0);
-  const auto &item = model->getItem(index.row());
+  const auto &item = model->getItem(sourceIndex.row());
   if (item.type == ResultListItem::Header) {
     return QSize(option.rect.width(), 40);
   } else {
@@ -109,11 +130,12 @@ bool ResultItemDelegate::editorEvent(QEvent *event, QAbstractItemModel *model,
   if (!event)
     return false;
 
-  auto *listModel = qobject_cast<ResultListModel *>(model);
+  QModelIndex sourceIndex;
+  auto *listModel = getSourceModelAndIndex(model, index, sourceIndex);
   if (!listModel)
     return false;
 
-  const auto &item = listModel->getItem(index.row());
+  const auto &item = listModel->getItem(sourceIndex.row());
   if (item.type != ResultListItem::ImageRow)
     return false;
 
@@ -167,12 +189,12 @@ bool ResultItemDelegate::helpEvent(QHelpEvent *event, QAbstractItemView *view,
     return false;
 
   if (event->type() == QEvent::ToolTip) {
-    const auto *listModel =
-        qobject_cast<const ResultListModel *>(index.model());
+    QModelIndex sourceIndex;
+    const auto *listModel = getSourceModelAndIndex(index, sourceIndex);
     if (!listModel)
       return false;
 
-    const auto &item = listModel->getItem(index.row());
+    const auto &item = listModel->getItem(sourceIndex.row());
     if (item.type != ResultListItem::ImageRow)
       return false;
 
