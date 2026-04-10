@@ -3,6 +3,7 @@ project(DupFind VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+option(USE_NATIVE_OPTIMIZATION "Optimize for the local machine" OFF)
 
 # 最適化と popcnt 命令出力のためのフラグ設定
 if(MSVC)
@@ -10,6 +11,9 @@ if(MSVC)
     set(X_VCPKG_APPLOCAL_DEPS_INSTALL ON)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-mpopcnt -msse4.2)
+    if(USE_NATIVE_OPTIMIZATION)
+        add_compile_options(-march=native)
+    endif()
 endif()
 
 # Qt 6
