@@ -236,7 +236,11 @@ void MainWindow::saveSettings() {
   for (int i = 0; i < m_dirList->count(); ++i) {
     dirs << m_dirList->item(i)->text();
   }
-  settings.setValue("directories", dirs);
+  if (dirs.isEmpty()) {
+    settings.remove("directories");
+  } else {
+    settings.setValue("directories", dirs);
+  }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -376,6 +380,13 @@ void MainWindow::onThresholdChanged(int value) {
   m_currentThreshold = value;
   m_thresholdLabel->setText(QString::number(value));
 
+  // Hide and clear search to reset filter on new search condition
+  if (m_searchBox->isVisible() || !m_searchBox->text().isEmpty()) {
+    m_searchBox->clear();
+    m_searchBox->setVisible(false);
+    m_resultView->setFocus();
+  }
+
   // フリーズして強制終了しても次回起動時に閾値が復元されるように保存
   saveSettings();
 
@@ -385,6 +396,14 @@ void MainWindow::onThresholdChanged(int value) {
 
 void MainWindow::onStrictChanged(int state) {
   m_strictMode = (state == Qt::Checked);
+
+  // Hide and clear search to reset filter on new search condition
+  if (m_searchBox->isVisible() || !m_searchBox->text().isEmpty()) {
+    m_searchBox->clear();
+    m_searchBox->setVisible(false);
+    m_resultView->setFocus();
+  }
+
   m_searchTimer->start();
 }
 
