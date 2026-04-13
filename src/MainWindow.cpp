@@ -1,5 +1,6 @@
 #include "MainWindow.hpp"
 #include "ImageHasher.hpp"
+#include <QDir>
 #include <QDirIterator>
 #include <QFile>
 #include <QFileDialog>
@@ -21,11 +22,18 @@
 #include <QMenu>
 #include <QPointer>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QUrl>
 #include <QtConcurrent>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
-  m_dbManager = std::make_unique<DatabaseManager>("dupfind_cache.db");
+  QString dataPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+  if (!QDir().exists(dataPath)) {
+    QDir().mkpath(dataPath);
+  }
+  QString dbPath = dataPath + "/dupfind_cache.db";
+  m_dbManager = std::make_unique<DatabaseManager>(dbPath.toStdString());
   m_dbManager->open();
   m_scanWatcher = new QFutureWatcher<void>(this);
   m_searchWatcher = new QFutureWatcher<std::vector<DuplicateGroup>>(this);
@@ -135,7 +143,8 @@ void MainWindow::setupUi() {
   // Results section (Search box + List View)
   auto *resultLayout = new QVBoxLayout();
   m_searchBox = new QLineEdit();
-  m_searchBox->setPlaceholderText("Filter results by path or filename... (Press Esc to close)");
+  m_searchBox->setPlaceholderText(
+      "Filter results by path or filename... (Press Esc to close)");
   m_searchBox->setVisible(false);
   resultLayout->addWidget(m_searchBox);
 
@@ -145,15 +154,15 @@ void MainWindow::setupUi() {
   m_proxyModel = new ResultFilterProxyModel(this);
   m_proxyModel->setSourceModel(m_model);
   m_delegate = new ResultItemDelegate(this);
-  
+
   m_resultView->setModel(m_proxyModel);
   m_resultView->setItemDelegate(m_delegate);
   m_resultView->setSelectionMode(QAbstractItemView::NoSelection);
   m_resultView->setSpacing(5);
-  
+
   m_resultView->installEventFilter(this);
   m_searchBox->installEventFilter(this);
-  
+
   resultLayout->addWidget(m_resultView);
   splitLayout->addLayout(resultLayout);
 
@@ -173,12 +182,12 @@ void MainWindow::setupUi() {
           &MainWindow::onRemoveDirectory);
   connect(m_startScanBtn, &QPushButton::clicked, this,
           &MainWindow::onStartScan);
-  connect(m_searchBox, &QLineEdit::textChanged, this, &MainWindow::onSearchTextChanged);
+  connect(m_searchBox, &QLineEdit::textChanged, this,
+          &MainWindow::onSearchTextChanged);
   connect(m_clearBtn, &QPushButton::clicked, this, &MainWindow::onClearResults);
 
-  connect(m_deselectBtn, &QPushButton::clicked, this, [this]() {
-    m_model->clearAllChecks();
-  });
+  connect(m_deselectBtn, &QPushButton::clicked, this,
+          [this]() { m_model->clearAllChecks(); });
 
   connect(m_deleteBtn, &QPushButton::clicked, this,
           &MainWindow::onDeleteSelected);
@@ -196,7 +205,13 @@ void MainWindow::setupUi() {
 }
 
 void MainWindow::loadSettings() {
-  QString iniPath = QCoreApplication::applicationDirPath() + "/DupFind.ini";
+  //  QString iniPath = QCoreApplication::applicationDirPath() + "/DupFind.ini";
+  QString dataPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+  if (!QDir().exists(dataPath)) {
+    QDir().mkpath(dataPath);
+  }
+  QString iniPath = dataPath + "/settings.ini";
   QSettings settings(iniPath, QSettings::IniFormat);
 
   m_currentThreshold = settings.value("threshold", 5).toInt();
@@ -205,7 +220,13 @@ void MainWindow::loadSettings() {
 }
 
 void MainWindow::saveSettings() {
-  QString iniPath = QCoreApplication::applicationDirPath() + "/DupFind.ini";
+  //  QString iniPath = QCoreApplication::applicationDirPath() + "/DupFind.ini";
+  QString dataPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+  if (!QDir().exists(dataPath)) {
+    QDir().mkpath(dataPath);
+  }
+  QString iniPath = dataPath + "/settings.ini";
   QSettings settings(iniPath, QSettings::IniFormat);
 
   settings.setValue("threshold", m_currentThreshold);
@@ -323,7 +344,9 @@ void MainWindow::onStartScan() {
     auto results = QtConcurrent::blockingMapped(allFiles, processFunc);
 
     // 4. DBへの一括保存 (メインスレッドの管理外のDB接続で行う)
-    DatabaseManager db("dupfind_cache.db");
+    QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    QString dbPath = dataPath + "/dupfind_cache.db";
+    DatabaseManager db(dbPath.toStdString());
     if (db.open()) {
       db.cleanupStaleEntries(); // DBに存在して実体がないファイルを削除
       db.beginTransaction();
@@ -413,19 +436,19 @@ void MainWindow::removeGroupFromView(int groupId) {
   }
 }
 
-void MainWindow::onClearResults() {
-  m_model->clear();
-}
+void MainWindow::onClearResults() { m_model->clear(); }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
   if (event->type() == QEvent::KeyPress) {
     QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
     if (obj == m_resultView) {
-      if ((keyEvent->modifiers() & Qt::ControlModifier) && keyEvent->key() == Qt::Key_F) {
+      if ((keyEvent->modifiers() & Qt::ControlModifier) &&
+          keyEvent->key() == Qt::Key_F) {
         m_searchBox->setVisible(true);
         m_searchBox->setFocus();
         return true;
-      } else if (keyEvent->key() == Qt::Key_F && keyEvent->modifiers() == Qt::NoModifier) {
+      } else if (keyEvent->key() == Qt::Key_F &&
+                 keyEvent->modifiers() == Qt::NoModifier) {
         m_searchBox->setVisible(true);
         m_searchBox->setFocus();
         return true;
@@ -448,13 +471,15 @@ void MainWindow::onSearchTextChanged(const QString &text) {
   }
 }
 
-void MainWindow::onFileDoubleClicked(const std::string& path) {
+void MainWindow::onFileDoubleClicked(const std::string &path) {
   if (!path.empty()) {
-    QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdString(path)));
+    QDesktopServices::openUrl(
+        QUrl::fromLocalFile(QString::fromStdString(path)));
   }
 }
 
-void MainWindow::onContextMenuRequested(const std::string& path, int groupId, const QPoint& globalPos) {
+void MainWindow::onContextMenuRequested(const std::string &path, int groupId,
+                                        const QPoint &globalPos) {
   if (!path.empty()) {
     QMenu menu;
     QAction *copyAction = menu.addAction("Copy Full Path(&C)");
@@ -481,9 +506,9 @@ void MainWindow::onDeleteSelected() {
   for (int i = 0; i < m_proxyModel->rowCount(); ++i) {
     QModelIndex proxyIndex = m_proxyModel->index(i, 0);
     QModelIndex sourceIndex = m_proxyModel->mapToSource(proxyIndex);
-    const auto& item = m_model->getItem(sourceIndex.row());
+    const auto &item = m_model->getItem(sourceIndex.row());
     if (item.type == ResultListItem::Header) {
-        visibleGroupIds.insert(item.groupId);
+      visibleGroupIds.insert(item.groupId);
     }
   }
 
@@ -492,22 +517,22 @@ void MainWindow::onDeleteSelected() {
   std::map<int, int> groupCheckedCount;
   std::vector<std::string> pathsToDelete;
 
-  const auto& checkStates = m_model->getCheckStates();
+  const auto &checkStates = m_model->getCheckStates();
 
   int groupId = 0;
-  for (const auto& group : m_currentGroups) {
-      if (visibleGroupIds.find(groupId) != visibleGroupIds.end()) {
-          for (const auto& img : group.images) {
-              groupTotalCount[groupId]++;
-              auto it = checkStates.find(img.path);
-              if (it != checkStates.end() && it->second) {
-                  groupCheckedCount[groupId]++;
-                  count++;
-                  pathsToDelete.push_back(img.path);
-              }
-          }
+  for (const auto &group : m_currentGroups) {
+    if (visibleGroupIds.find(groupId) != visibleGroupIds.end()) {
+      for (const auto &img : group.images) {
+        groupTotalCount[groupId]++;
+        auto it = checkStates.find(img.path);
+        if (it != checkStates.end() && it->second) {
+          groupCheckedCount[groupId]++;
+          count++;
+          pathsToDelete.push_back(img.path);
+        }
       }
-      groupId++;
+    }
+    groupId++;
   }
 
   if (count == 0)
@@ -540,13 +565,13 @@ void MainWindow::onDeleteSelected() {
 
   if (res == QMessageBox::Yes) {
     std::vector<QString> failures;
-    for (const auto& path : pathsToDelete) {
-        QString qPath = QString::fromStdString(path);
-        if (QFile::moveToTrash(qPath)) {
-            m_dbManager->removeImage(path);
-        } else {
-            failures.push_back(qPath);
-        }
+    for (const auto &path : pathsToDelete) {
+      QString qPath = QString::fromStdString(path);
+      if (QFile::moveToTrash(qPath)) {
+        m_dbManager->removeImage(path);
+      } else {
+        failures.push_back(qPath);
+      }
     }
 
     if (!failures.empty()) {

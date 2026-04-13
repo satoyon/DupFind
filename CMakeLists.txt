@@ -65,3 +65,47 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 add_executable(DupFindCmd src/CmdMain.cpp)
 target_link_libraries(DupFindCmd PRIVATE DupFindCore)
 
+# -----------------------------------------------------------------------------
+# Deployment Configuration (Windows)
+# -----------------------------------------------------------------------------
+if(WIN32)
+    # UCRTライブラリを自動的に含める
+    set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE)
+    include(InstallRequiredSystemLibraries)
+    # vc_redist.x64.exeを外す
+    if(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS)
+        list(FILTER CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS EXCLUDE REGEX "\\.exe$")
+    endif()
+    
+    # Qt6::qmake 経由で bin ディレクトリを特定し windeployqt を探す
+    get_target_property(_qmake_exe Qt6::qmake IMPORTED_LOCATION)
+    get_filename_component(_qt_bin_dir "${_qmake_exe}" DIRECTORY)
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
+
+    set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Deploy/DupFind")
+
+    # `cmake --build build --target deploy` で起動する専用ターゲット
+    add_custom_target(deploy
+        # 1. 展開用ディレクトリの作成
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_DIR}"
+        
+        # 2. 実行ファイル本体のコピー
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${PROJECT_NAME}>" "${DEPLOY_DIR}/"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:DupFindCmd>" "${DEPLOY_DIR}/"
+        
+        # 3. リソースディレクトリのコピー
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/resources" "${DEPLOY_DIR}/resources"
+        
+        # 4. vcpkgがビルドディレクトリに出力した サードパーティDLL (OpenCV, SQLiteなど) の収集
+        COMMAND powershell -NoProfile -Command "Copy-Item -Path '$<TARGET_FILE_DIR:${PROJECT_NAME}>/*.dll' -Destination '${DEPLOY_DIR}/' -Force -ErrorAction SilentlyContinue"
+
+        # UCRTライブラリのコピー
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} "${DEPLOY_DIR}/"
+        
+        # 5. windeployqt による Qt DLL (--compiler-runtime) の自動収集
+        COMMAND "${WINDEPLOYQT_EXECUTABLE}" --no-translations --dir "${DEPLOY_DIR}" "${DEPLOY_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
+        
+        DEPENDS ${PROJECT_NAME} DupFindCmd
+        COMMENT "Deploying and bundling all dependencies into ${DEPLOY_DIR}..."
+    )
+endif()

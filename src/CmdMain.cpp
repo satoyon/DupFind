@@ -1,8 +1,11 @@
 #include <QCoreApplication>
+#include <QDir>
 #include <QDirIterator>
 #include <QProcess>
 #include <QSettings>
 #include <QSharedMemory>
+#include <QStandardPaths>
+#include <QString>
 #include <QStringList>
 #include <QThread>
 #include <chrono>
@@ -23,6 +26,9 @@ void cmdStrict(bool strict);
 int main(int argc, char *argv[]) {
   // OpenCVの不要なINFOログ（並列バックエンド読み込み失敗など）を抑制する
   cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_ERROR);
+
+  QCoreApplication::setOrganizationName("Yoneda");
+  QCoreApplication::setApplicationName("DupFind");
 
   QCoreApplication app(argc, argv);
   QStringList args = app.arguments();
@@ -83,7 +89,12 @@ int main(int argc, char *argv[]) {
 }
 
 void cmdTh(int thValue) {
-  QString iniPath = QCoreApplication::applicationDirPath() + "/DupFind.ini";
+  QString confPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+  if (!QDir().exists(confPath)) {
+    QDir().mkpath(confPath);
+  }
+  QString iniPath = confPath + "/settings.ini";
   QSettings settings(iniPath, QSettings::IniFormat);
   settings.setValue("threshold", thValue);
   std::cout << "Successfully updated threshold to " << thValue << ".\n";
@@ -92,7 +103,12 @@ void cmdTh(int thValue) {
 // GUI以外からディレクトリ追加を指示するコマンド
 // 設定ファイル(INI)を更新した上で、バックグラウンドのワーカプロセスをデタッチ起動する
 void cmdAdd(const QStringList &dirs) {
-  QString iniPath = QCoreApplication::applicationDirPath() + "/DupFind.ini";
+  QString confPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+  if (!QDir().exists(confPath)) {
+    QDir().mkpath(confPath);
+  }
+  QString iniPath = confPath + "/settings.ini";
   QSettings settings(iniPath, QSettings::IniFormat);
 
   QStringList existingDirs = settings.value("directories").toStringList();
@@ -130,7 +146,14 @@ void workerAdd(const QStringList &dirs) {
   // GUIが起動しているか確認するための共有メモリ
   QSharedMemory sharedMem("DupFind_GUI_Instance");
 
-  DatabaseManager dbManager("dupfind_cache.db");
+  QString dataPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+  if (!QDir().exists(dataPath)) {
+    QDir().mkpath(dataPath);
+  }
+  QString dbPath = dataPath + "/dupfind_cache.db";
+
+  DatabaseManager dbManager(dbPath.toStdString());
   if (!dbManager.open())
     return;
 
@@ -213,12 +236,24 @@ void cmdSearch(const QString &imageFile) {
   uint64_t dhash = ImageHasher::calculateDHash(img);
   uint64_t phash = ImageHasher::calculatePHash(img);
 
-  QString iniPath = QCoreApplication::applicationDirPath() + "/DupFind.ini";
+  QString confPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+  if (!QDir().exists(confPath)) {
+    QDir().mkpath(confPath);
+  }
+  QString iniPath = confPath + "/settings.ini";
   QSettings settings(iniPath, QSettings::IniFormat);
   int threshold = settings.value("threshold", 5).toInt();
   bool strict = settings.value("strict_mode", false).toBool();
 
-  DatabaseManager dbManager("dupfind_cache.db");
+  QString dataPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+  if (!QDir().exists(dataPath)) {
+    QDir().mkpath(dataPath);
+  }
+  QString dbPath = dataPath + "/dupfind_cache.db";
+
+  DatabaseManager dbManager(dbPath.toStdString());
   if (!dbManager.open())
     return;
 
@@ -237,7 +272,12 @@ void cmdSearch(const QString &imageFile) {
 }
 
 void cmdStrict(bool strict) {
-  QString iniPath = QCoreApplication::applicationDirPath() + "/DupFind.ini";
+  QString confPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+  if (!QDir().exists(confPath)) {
+    QDir().mkpath(confPath);
+  }
+  QString iniPath = confPath + "/settings.ini";
   QSettings settings(iniPath, QSettings::IniFormat);
   settings.setValue("strict_mode", strict);
   std::cout << "Successfully updated strict mode to " << (strict ? "on" : "off")
