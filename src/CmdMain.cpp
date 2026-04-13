@@ -30,7 +30,6 @@ int main(int argc, char *argv[]) {
   // OpenCVの不要なINFOログ（並列バックエンド読み込み失敗など）を抑制する
   cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_ERROR);
 
-  QCoreApplication::setOrganizationName("Yoneda");
   QCoreApplication::setApplicationName("DupFind");
 
   QCoreApplication app(argc, argv);
@@ -159,8 +158,10 @@ void startBackgroundScan(const QStringList &dirs) {
 }
 
 void cmdRemove(const QStringList &dirs) {
-  QString confPath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-  if (!QDir().exists(confPath)) QDir().mkpath(confPath);
+  QString confPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+  if (!QDir().exists(confPath))
+    QDir().mkpath(confPath);
   QString iniPath = confPath + "/settings.ini";
   QSettings settings(iniPath, QSettings::IniFormat);
 
@@ -180,7 +181,8 @@ void cmdRemove(const QStringList &dirs) {
   }
 
   // DB内の該当ディレクトリを「検索対象外(is_searched=0)」にする
-  QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+  QString dataPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
   QString dbPath = dataPath + "/dupfind_cache.db";
   DatabaseManager dbManager(dbPath.toStdString());
   if (dbManager.open()) {
@@ -191,8 +193,10 @@ void cmdRemove(const QStringList &dirs) {
 }
 
 void cmdRescan() {
-  QString confPath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-  if (!QDir().exists(confPath)) QDir().mkpath(confPath);
+  QString confPath =
+      QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+  if (!QDir().exists(confPath))
+    QDir().mkpath(confPath);
   QString iniPath = confPath + "/settings.ini";
   QSettings settings(iniPath, QSettings::IniFormat);
 
@@ -203,7 +207,6 @@ void cmdRescan() {
   }
   startBackgroundScan(existingDirs);
 }
-
 
 // バックグラウンドで画像ファイルのハッシュ値(dHash,
 // pHash)を計算し、DBへ書き込む処理
@@ -289,8 +292,6 @@ void workerAdd(const QStringList &dirs) {
     }
   }
 }
-
-
 
 // 指定された1つの画像ファイルと類似する「DB上の全ての画像」を検索してパスを出力するコマンド
 void cmdSearch(const QString &imageFile) {
