@@ -18,7 +18,10 @@
 #include <opencv2/core/utils/logger.hpp>
 
 void workerAdd(const QStringList &dirs);
+void startBackgroundScan(const QStringList &dirs);
 void cmdAdd(const QStringList &dirs);
+void cmdRemove(const QStringList &dirs);
+void cmdRescan();
 void cmdTh(int thValue);
 void cmdSearch(const QString &imageFile);
 void cmdStrict(bool strict);
@@ -35,6 +38,8 @@ int main(int argc, char *argv[]) {
 
   if (args.size() < 2) {
     std::cerr << "Usage: DupFindCmd add <dir1> <dir2> ...\n"
+              << "       DupFindCmd remove <dir1> <dir2> ...\n"
+              << "       DupFindCmd rescan\n"
               << "       DupFindCmd th <N>\n"
               << "       DupFindCmd search <image_file>\n"
               << "       DupFindCmd strict [on|off]\n";
@@ -53,6 +58,17 @@ int main(int argc, char *argv[]) {
       return 1;
     }
     cmdAdd(args.mid(2));
+    return 0;
+  } else if (command == "remove") {
+    if (args.size() < 3) {
+      std::cerr << "Error: 'remove' Requires at least one directory.\n";
+      return 1;
+    }
+    cmdRemove(args.mid(2));
+    return 0;
+  } else if (command == "rescan") {
+    // rescan takes no additional arguments
+    cmdRescan();
     return 0;
   } else if (command == "th") {
     if (args.size() != 3) {
@@ -126,15 +142,68 @@ void cmdAdd(const QStringList &dirs) {
     settings.setValue("directories", existingDirs);
   }
 
-  std::cout << "Started background scan.\n";
+  startBackgroundScan(dirs);
+}
 
-  // デタッチしてバックグラウンドプロセスを起動
+// バックグラウンドプロセス起動処理の共通化 (add, rescan で再利用)
+void startBackgroundScan(const QStringList &dirs) {
+  if (dirs.isEmpty()) {
+    std::cout << "No directories to scan.\n";
+    return;
+  }
+  std::cout << "Started background scan.\n";
   QString program = QCoreApplication::applicationFilePath();
   QStringList workerArgs;
   workerArgs << "--worker-add" << dirs;
-
   QProcess::startDetached(program, workerArgs);
 }
+
+void cmdRemove(const QStringList &dirs) {
+  QString confPath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+  if (!QDir().exists(confPath)) QDir().mkpath(confPath);
+  QString iniPath = confPath + "/settings.ini";
+  QSettings settings(iniPath, QSettings::IniFormat);
+
+  QStringList existingDirs = settings.value("directories").toStringList();
+  bool changed = false;
+
+  for (const QString &dir : dirs) {
+    if (existingDirs.contains(dir, Qt::CaseInsensitive)) {
+      existingDirs.removeOne(dir);
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    settings.setValue("directories", existingDirs);
+    std::cout << "Successfully removed directories from config.\n";
+  }
+
+  // DB内の該当ディレクトリを「検索対象外(is_searched=0)」にする
+  QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+  QString dbPath = dataPath + "/dupfind_cache.db";
+  DatabaseManager dbManager(dbPath.toStdString());
+  if (dbManager.open()) {
+    for (const QString &dir : dirs) {
+      dbManager.setDirectorySearchedStatus(dir.toStdString(), false);
+    }
+  }
+}
+
+void cmdRescan() {
+  QString confPath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+  if (!QDir().exists(confPath)) QDir().mkpath(confPath);
+  QString iniPath = confPath + "/settings.ini";
+  QSettings settings(iniPath, QSettings::IniFormat);
+
+  QStringList existingDirs = settings.value("directories").toStringList();
+  if (existingDirs.isEmpty()) {
+    std::cout << "No directories configured in settings.ini to rescan.\n";
+    return;
+  }
+  startBackgroundScan(existingDirs);
+}
+
 
 // バックグラウンドで画像ファイルのハッシュ値(dHash,
 // pHash)を計算し、DBへ書き込む処理
@@ -220,6 +289,8 @@ void workerAdd(const QStringList &dirs) {
     }
   }
 }
+
+
 
 // 指定された1つの画像ファイルと類似する「DB上の全ての画像」を検索してパスを出力するコマンド
 void cmdSearch(const QString &imageFile) {
