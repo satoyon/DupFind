@@ -58,6 +58,7 @@ void ResultItemDelegate::paint(QPainter *painter,
   } else {
     int cardWidth = option.rect.width() / 4;
     for (int i = 0; i < static_cast<int>(item.images.size()); ++i) {
+      painter->save();
       const auto &imgData = item.images[i];
       QRect cardRect(option.rect.x() + i * cardWidth, option.rect.y(),
                      cardWidth, option.rect.height());
@@ -104,6 +105,7 @@ void ResultItemDelegate::paint(QPainter *painter,
       painter->setPen(QColor("#666666"));
       painter->drawText(textRect,
                         Qt::AlignTop | Qt::AlignLeft | Qt::TextWordWrap, info);
+      painter->restore();
     }
   }
 
