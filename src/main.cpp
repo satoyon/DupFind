@@ -1,9 +1,30 @@
 #include <QApplication>
+#include <QLibraryInfo>
+#include <QLocale>
 #include <QSharedMemory>
+#include <QTranslator>
 #include "MainWindow.hpp"
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
+
+    // Load translations
+    QTranslator translator;
+    const QStringList uiLanguages = QLocale::system().uiLanguages();
+    for (const QString &locale : uiLanguages) {
+        const QString baseName = "dupfind_" + QLocale(locale).name();
+        if (translator.load(":/i18n/" + baseName)) {
+            app.installTranslator(&translator);
+            break;
+        }
+    }
+
+    // Load standard Qt translations (for QFileDialog, etc.)
+    QTranslator qtTranslator;
+    if (qtTranslator.load(QLocale::system(), "qtbase", "_",
+                          QLibraryInfo::path(QLibraryInfo::TranslationsPath))) {
+        app.installTranslator(&qtTranslator);
+    }
     
     // Create a shared memory object to indicate that the GUI is running
     QSharedMemory sharedMem("DupFind_GUI_Instance");

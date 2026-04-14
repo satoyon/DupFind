@@ -93,10 +93,10 @@ void MainWindow::setupUi() {
 
   // Toolbar-like top section
   auto *toolLayout = new QHBoxLayout();
-  m_addDirBtn = new QPushButton("Add Directory");
-  m_removeDirBtn = new QPushButton("Remove Selected");
-  m_startScanBtn = new QPushButton("Start Scan");
-  m_deleteBtn = new QPushButton("Delete Selected Duplicates");
+  m_addDirBtn = new QPushButton(tr("Add Directory"));
+  m_removeDirBtn = new QPushButton(tr("Remove Selected"));
+  m_startScanBtn = new QPushButton(tr("Start Scan"));
+  m_deleteBtn = new QPushButton(tr("Delete Selected Duplicates"));
   m_deleteBtn->setObjectName("deleteBtn"); // QSS で赤くするため
 
   toolLayout->addWidget(m_addDirBtn);
@@ -104,7 +104,7 @@ void MainWindow::setupUi() {
   toolLayout->addStretch();
 
   // Slider section
-  toolLayout->addWidget(new QLabel("Similarity Threshold:"));
+  toolLayout->addWidget(new QLabel(tr("Similarity Threshold:")));
   m_thresholdSlider = new QSlider(Qt::Horizontal);
   m_thresholdSlider->setRange(0, 32);
   m_thresholdSlider->setValue(m_currentThreshold);
@@ -113,15 +113,15 @@ void MainWindow::setupUi() {
   toolLayout->addWidget(m_thresholdSlider);
   toolLayout->addWidget(m_thresholdLabel);
 
-  m_strictCheckBox = new QCheckBox("Strict");
+  m_strictCheckBox = new QCheckBox(tr("Strict"));
   m_strictCheckBox->setChecked(m_strictMode);
   toolLayout->addWidget(m_strictCheckBox);
 
   toolLayout->addWidget(m_startScanBtn);
-  m_clearBtn = new QPushButton("Clear Results");
+  m_clearBtn = new QPushButton(tr("Clear Results"));
   toolLayout->addWidget(m_clearBtn);
 
-  m_deselectBtn = new QPushButton("Deselect All");
+  m_deselectBtn = new QPushButton(tr("Deselect All"));
   toolLayout->addWidget(m_deselectBtn);
 
   toolLayout->addWidget(m_deleteBtn);
@@ -144,7 +144,7 @@ void MainWindow::setupUi() {
   auto *resultLayout = new QVBoxLayout();
   m_searchBox = new QLineEdit();
   m_searchBox->setPlaceholderText(
-      "Filter results by path or filename... (Press Esc to close)");
+      tr("Filter results by path or filename... (Press Esc to close)"));
   m_searchBox->setVisible(false);
   resultLayout->addWidget(m_searchBox);
 
@@ -250,7 +250,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::onAddDirectory() {
   QString dir =
-      QFileDialog::getExistingDirectory(this, "Select Directory to Scan");
+      QFileDialog::getExistingDirectory(this, tr("Select Directory to Scan"));
   if (!dir.isEmpty()) {
     auto *item = new QListWidgetItem(dir, m_dirList);
     item->setToolTip(dir);
@@ -274,8 +274,8 @@ void MainWindow::onRemoveDirectory() {
 // 選択されたディレクトリを再帰的に走査し、並列処理によって高速に画像ハッシュを分散計算し、DB保存する
 void MainWindow::onStartScan() {
   if (m_dirList->count() == 0) {
-    QMessageBox::warning(this, "No Directory",
-                         "Please add at least one directory to scan.");
+    QMessageBox::warning(this, tr("No Directory"),
+                         tr("Please add at least one directory to scan."));
     return;
   }
 
@@ -418,7 +418,7 @@ void MainWindow::performAsyncSearch() {
 
   m_progressBar->setVisible(true);
   m_progressBar->setRange(0, 0);
-  m_progressBar->setFormat("Searching duplicates... %p%");
+  m_progressBar->setFormat(tr("Searching duplicates... %p%"));
 
   // 現在実行中の検索があればキャンセルはできないが、WatcherのFutureを上書きすることで最新のみを追う
   auto future = QtConcurrent::run([images = m_lastScannedImages,
@@ -501,9 +501,9 @@ void MainWindow::onContextMenuRequested(const std::string &path, int groupId,
                                         const QPoint &globalPos) {
   if (!path.empty()) {
     QMenu menu;
-    QAction *copyAction = menu.addAction("Copy Full Path(&C)");
+    QAction *copyAction = menu.addAction(tr("Copy Full Path(&C)"));
     menu.addSeparator();
-    QAction *removeAction = menu.addAction("Remove from List(&R)");
+    QAction *removeAction = menu.addAction(tr("Remove from List(&R)"));
 
     QAction *selectedAction = menu.exec(globalPos);
     if (selectedAction == copyAction) {
@@ -567,11 +567,11 @@ void MainWindow::onDeleteSelected() {
 
   if (allCheckedInSomeGroup) {
     auto warnRes = QMessageBox::warning(
-        this, "Warning: All images selected",
-        "一部の類似画像グループで、すべての画像が削除対象としてチェックされてい"
-        "ます。\n"
-        "このまま削除すると、それらの画像ファイルはすべて失われます。\n\n"
-        "本当に削除を実行しますか？",
+        this, tr("Warning: All images selected"),
+        tr("一部の類似画像グループで、すべての画像が削除対象としてチェックされてい"
+           "ます。\n"
+           "このまま削除すると、それらの画像ファイルはすべて失われます。\n\n"
+           "本当に削除を実行しますか？"),
         QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Cancel);
     if (warnRes != QMessageBox::Ok) {
       return;
@@ -579,8 +579,8 @@ void MainWindow::onDeleteSelected() {
   }
 
   auto res = QMessageBox::question(
-      this, "Confirm Deletion",
-      QString("Are you sure you want to move %1 images to Trash?").arg(count));
+      this, tr("Confirm Deletion"),
+      tr("Are you sure you want to move %1 images to Trash?").arg(count));
 
   if (res == QMessageBox::Yes) {
     std::vector<QString> failures;
@@ -594,12 +594,12 @@ void MainWindow::onDeleteSelected() {
     }
 
     if (!failures.empty()) {
-      QString msg = "The following files could not be moved to trash and were "
-                    "NOT deleted:\n\n";
+      QString msg = tr("The following files could not be moved to trash and were "
+                       "NOT deleted:\n\n");
       for (const auto &f : failures) {
         msg += f + "\n";
       }
-      QMessageBox::warning(this, "Deletion Error", msg);
+      QMessageBox::warning(this, tr("Deletion Error"), msg);
     }
 
     // リストをリフレッシュ

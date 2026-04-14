@@ -58,7 +58,7 @@ void ResultListModel::setGroups(const std::vector<DuplicateGroup>& groups, bool 
         ResultListItem header;
         header.type = ResultListItem::Header;
         header.groupId = groupId;
-        header.headerText = QString("Duplicate Group - %1 images").arg(group.images.size());
+        header.headerText = tr("Duplicate Group - %1 images").arg(group.images.size());
         m_items.push_back(header);
         
         ResultListItem rowItem;

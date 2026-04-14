@@ -68,7 +68,7 @@ void ResultItemDelegate::paint(QPainter *painter,
       QPixmap pix = model->getThumbnail(imgData.path);
       if (pix.isNull()) {
         painter->setPen(Qt::black);
-        painter->drawText(thumbRect, Qt::AlignCenter, "Loading...");
+        painter->drawText(thumbRect, Qt::AlignCenter, tr("Loading..."));
       } else {
         // center pixmap
         QPoint topLeft(thumbRect.center().x() - pix.width() / 2,
@@ -81,7 +81,7 @@ void ResultItemDelegate::paint(QPainter *painter,
                    20);
       QStyleOptionButton cbOpt;
       cbOpt.rect = cbRect;
-      cbOpt.text = "Delete candidate";
+      cbOpt.text = tr("Delete candidate");
       cbOpt.state = QStyle::State_Enabled;
       if (model->isChecked(imgData.path)) {
         cbOpt.state |= QStyle::State_On;

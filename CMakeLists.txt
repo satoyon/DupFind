@@ -17,7 +17,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 # Qt 6
-find_package(Qt6 COMPONENTS Widgets Concurrent REQUIRED)
+find_package(Qt6 COMPONENTS Widgets Concurrent Linguist REQUIRED)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
@@ -59,6 +59,22 @@ target_link_libraries(${PROJECT_NAME} PRIVATE DupFindCore)
 set_target_properties(${PROJECT_NAME} PROPERTIES
     WIN32_EXECUTABLE ON
     MACOSX_BUNDLE ON
+)
+
+# Translations
+qt_add_translations(${PROJECT_NAME}
+    TS_FILES 
+        translations/dupfind_en.ts
+        translations/dupfind_ja.ts
+        translations/dupfind_zh_CN.ts
+        translations/dupfind_zh_TW.ts
+        translations/dupfind_es.ts
+        translations/dupfind_de.ts
+        translations/dupfind_ru.ts
+        translations/dupfind_pt.ts
+        translations/dupfind_pl.ts
+        translations/dupfind_ko.ts
+    RESOURCE translations.qrc
 )
 
 # CLI target
@@ -113,7 +129,7 @@ if(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} "${DEPLOY_DIR}/"
         
         # 5. windeployqt による Qt DLL (--compiler-runtime) の自動収集
-        COMMAND "${WINDEPLOYQT_EXECUTABLE}" --no-translations --dir "${DEPLOY_DIR}" "${DEPLOY_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
+        COMMAND "${WINDEPLOYQT_EXECUTABLE}" --dir "${DEPLOY_DIR}" "${DEPLOY_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
         
         # 6. vc_redist.x64.exe の削除 (Appxには不要)
         COMMAND ${CMAKE_COMMAND} -E rm -f "${DEPLOY_DIR}/vc_redist.x64.exe"
