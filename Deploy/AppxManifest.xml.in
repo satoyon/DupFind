@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10" 
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap3 desktop rescap">
+
+  <!-- ============================================== -->
+  <!-- 1. パッケージの識別情報                        -->
+  <!-- ============================================== -->
+  <Identity
+    Name="Satoyon.DupFind"
+    Publisher="CN=Satoyon"
+    Version="@PROJECT_VERSION@.0"
+    ProcessorArchitecture="x64" />
+
+  <!-- ============================================== -->
+  <!-- 2. アプリの基本的なプロパティ設定              -->
+  <!-- ============================================== -->
+  <Properties>
+    <DisplayName>DupFind</DisplayName>
+    <PublisherDisplayName>Satoyon</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <!-- ============================================== -->
+  <!-- 3. 動作環境 (Windows 10/11 Desktop)            -->
+  <!-- ============================================== -->
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.14393.0" MaxVersionTested="10.0.22000.0" />
+  </Dependencies>
+
+  <!-- ============================================== -->
+  <!-- 4. 対応言語                                    -->
+  <!-- ============================================== -->
+  <Resources>
+    <Resource Language="ja-jp" />
+    <Resource Language="en-us" />
+  </Resources>
+
+  <!-- ============================================== -->
+  <!-- 5. エントリポイントとスタートメニュー設定      -->
+  <!-- ============================================== -->
+<Applications>
+    <Application Id="DupFind" Executable="DupFind.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="DupFind"
+        Description="GUI version of Duplicate Image Finder"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+    </Application>
+
+    <Application Id="DupFindCmd" Executable="DupFindCmd.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="DupFind CLI"
+        Description="Command line interface for DupFind"
+        BackgroundColor="transparent"
+        AppListEntry="none" 
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        </uap:VisualElements>
+
+      <Extensions>
+        <uap3:Extension Category="windows.appExecutionAlias">
+          <uap3:AppExecutionAlias>
+          <desktop:ExecutionAlias Alias="DupFindCmd.exe" />
+          </uap3:AppExecutionAlias>
+      </uap3:Extension>      </Extensions>
+    </Application>
+  </Applications>
+
+  <!-- ============================================== -->
+  <!-- 6. 既存のWin32APIをフルに使用するための権限  -->
+  <!-- ============================================== -->
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="broadFileSystemAccess" />
+  </Capabilities>
+
+</Package>

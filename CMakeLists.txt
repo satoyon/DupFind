@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(DupFind VERSION 0.1.0 LANGUAGES CXX)
+project(DupFind VERSION 0.3.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -84,6 +84,16 @@ if(WIN32)
 
     set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Deploy/DupFind")
 
+    # Appx Manifest Generation
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/Deploy/AppxManifest.xml.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/AppxManifest.xml"
+        @ONLY
+    )
+
+    # Path to makeappx.exe (Windows SDK Build Tools)
+    set(MAKEAPPX_EXECUTABLE "C:/Program Files (x86)/Microsoft Visual Studio/Shared/NuGetPackages/microsoft.windows.sdk.buildtools/10.0.26100.1742/bin/10.0.26100.0/x64/makeappx.exe")
+
     # `cmake --build build --target deploy` で起動する専用ターゲット
     add_custom_target(deploy
         # 1. 展開用ディレクトリの作成
@@ -105,7 +115,17 @@ if(WIN32)
         # 5. windeployqt による Qt DLL (--compiler-runtime) の自動収集
         COMMAND "${WINDEPLOYQT_EXECUTABLE}" --no-translations --dir "${DEPLOY_DIR}" "${DEPLOY_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
         
+        # 6. vc_redist.x64.exe の削除 (Appxには不要)
+        COMMAND ${CMAKE_COMMAND} -E rm -f "${DEPLOY_DIR}/vc_redist.x64.exe"
+
+        # 7. Appx用リソースとManifestのコピー
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/AppxManifest.xml" "${DEPLOY_DIR}/"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/Deploy/Assets" "${DEPLOY_DIR}/Assets"
+
+        # 8. Appxパッケージの作成
+        COMMAND "${MAKEAPPX_EXECUTABLE}" pack /d "${DEPLOY_DIR}" /p "${CMAKE_CURRENT_SOURCE_DIR}/Deploy/DupFind.appx" /l /o
+
         DEPENDS ${PROJECT_NAME} DupFindCmd
-        COMMENT "Deploying and bundling all dependencies into ${DEPLOY_DIR}..."
+        COMMENT "Deploying and creating Appx package in ${CMAKE_CURRENT_SOURCE_DIR}/Deploy/DupFind.appx..."
     )
 endif()
