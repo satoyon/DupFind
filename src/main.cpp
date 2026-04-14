@@ -11,17 +11,26 @@ int main(int argc, char *argv[]) {
 
     // Load translations
     QTranslator translator;
-    const QStringList uiLanguages = QLocale::system().uiLanguages();
-    qDebug() << "System UI Languages:" << uiLanguages;
+    
+    // Priority 1: Use system locale name (respects LANG/LC_ALL environment variables)
+    QString systemLocale = QLocale::system().name();
+    qDebug() << "Current system locale name:" << systemLocale;
+    if (translator.load(":/i18n/dupfind_" + systemLocale)) {
+        qDebug() << "Successfully loaded translation via system locale name:" << systemLocale;
+        app.installTranslator(&translator);
+    } else {
+        // Priority 2: Fallback to uiLanguages list
+        const QStringList uiLanguages = QLocale::system().uiLanguages();
+        qDebug() << "System UI Languages (Fallback):" << uiLanguages;
 
-    for (const QString &locale : uiLanguages) {
-        const QString baseName = "dupfind_" + QLocale(locale).name();
-        QString fullPath = ":/i18n/" + baseName;
-        qDebug() << "Attempting to load translation:" << fullPath;
-        if (translator.load(fullPath)) {
-            qDebug() << "Successfully loaded translation:" << fullPath;
-            app.installTranslator(&translator);
-            break;
+        for (const QString &locale : uiLanguages) {
+            const QString baseName = "dupfind_" + QLocale(locale).name();
+            QString fullPath = ":/i18n/" + baseName;
+            if (translator.load(fullPath)) {
+                qDebug() << "Successfully loaded translation via UI Languages (Fallback):" << fullPath;
+                app.installTranslator(&translator);
+                break;
+            }
         }
     }
 
