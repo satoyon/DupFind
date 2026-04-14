@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QDebug>
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QSharedMemory>
@@ -11,9 +12,14 @@ int main(int argc, char *argv[]) {
     // Load translations
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
+    qDebug() << "System UI Languages:" << uiLanguages;
+
     for (const QString &locale : uiLanguages) {
         const QString baseName = "dupfind_" + QLocale(locale).name();
-        if (translator.load(":/i18n/" + baseName)) {
+        QString fullPath = ":/i18n/" + baseName;
+        qDebug() << "Attempting to load translation:" << fullPath;
+        if (translator.load(fullPath)) {
+            qDebug() << "Successfully loaded translation:" << fullPath;
             app.installTranslator(&translator);
             break;
         }
