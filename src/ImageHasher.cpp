@@ -1,6 +1,8 @@
 #include "ImageHasher.hpp"
 #include <bit> // C++20 std::popcount
 #include <opencv2/imgproc.hpp>
+#include <QFile>
+#include <QByteArray>
 
 // 画像の輝度勾配（隣り合うピクセルの明暗）からハッシュを計算する(Difference
 // Hash) 処理が軽く、単純なリサイズ等に強い特徴がある
@@ -70,8 +72,15 @@ int ImageHasher::hammingDistance(uint64_t h1, uint64_t h2) {
 */
 
 cv::Mat ImageHasher::loadImage(const std::string &path, int targetSize) {
-  // Load with IMREAD_COLOR
-  cv::Mat img = cv::imread(path, cv::IMREAD_COLOR);
+  // Windowsでの日本語パス対応のため、QFileで読み込んでからimdecodeする
+  QFile file(QString::fromStdString(path));
+  if (!file.open(QIODevice::ReadOnly))
+    return cv::Mat();
+
+  QByteArray data = file.readAll();
+  cv::Mat img = cv::imdecode(cv::Mat(1, data.size(), CV_8U, data.data()),
+                             cv::IMREAD_COLOR);
+
   if (img.empty())
     return cv::Mat();
 

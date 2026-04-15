@@ -8,6 +8,7 @@
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QPixmap>
+#include <QUrl>
 #include <QVBoxLayout>
 #include <chrono>
 #include <filesystem>
@@ -20,6 +21,7 @@
 #include <QDesktopServices>
 #include <QImageReader>
 #include <QMenu>
+#include <QMimeData>
 #include <QPointer>
 #include <QSettings>
 #include <QStandardPaths>
@@ -175,6 +177,9 @@ void MainWindow::setupUi() {
 
   setCentralWidget(central);
 
+  // ドロップを受け付ける
+  setAcceptDrops(true);
+
   // Connections
   connect(m_addDirBtn, &QPushButton::clicked, this,
           &MainWindow::onAddDirectory);
@@ -246,6 +251,105 @@ void MainWindow::saveSettings() {
 void MainWindow::closeEvent(QCloseEvent *event) {
   saveSettings();
   QMainWindow::closeEvent(event);
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event) {
+  if (event->mimeData()->hasUrls()) {
+    event->acceptProposedAction();
+  }
+}
+
+// ドロップを受け付ける
+void MainWindow::dropEvent(QDropEvent *e) {
+  const QMimeData *mimeData = e->mimeData();
+  if (!mimeData->hasUrls())
+    return;
+
+  std::vector<DuplicateGroup> results;
+  auto candidates = getFilteredImages();
+  bool dirAdded = false;
+
+  for (const QUrl &url : mimeData->urls()) {
+    QString localPath = url.toLocalFile();
+    if (localPath.isEmpty())
+      continue;
+
+    QFileInfo fileInfo(localPath);
+    if (fileInfo.isDir()) {
+      // 重複チェック
+      bool exists = false;
+      for (int i = 0; i < m_dirList->count(); ++i) {
+        if (m_dirList->item(i)->text() == localPath) {
+          exists = true;
+          break;
+        }
+      }
+      if (!exists) {
+        auto *item = new QListWidgetItem(localPath, m_dirList);
+        item->setToolTip(localPath);
+        dirAdded = true;
+      }
+    } else if (fileInfo.isFile()) {
+      cv::Mat img = ImageHasher::loadImage(localPath.toStdString());
+      if (img.empty())
+        continue;
+      
+      // ここでクリア
+      m_model->clear();
+
+      uint64_t dhash = ImageHasher::calculateDHash(img);
+      uint64_t phash = ImageHasher::calculatePHash(img);
+
+      DuplicateGroup foundGroup;
+      // ドロップされた画像自身を最初に追加
+      ImageData dropped;
+      dropped.path = localPath.toStdString();
+      dropped.dhash = dhash;
+      dropped.phash = phash;
+      dropped.file_size = fileInfo.size();
+      dropped.timestamp = fileInfo.lastModified().toSecsSinceEpoch();
+      foundGroup.images.push_back(dropped);
+
+      for (const auto &cand : candidates) {
+        // 自分自身（パスが同じ）は除外
+        if (cand.path == dropped.path)
+          continue;
+
+        bool match = false;
+        if (m_strictMode) {
+          if (ImageHasher::hammingDistance(dhash, cand.dhash) <=
+                  m_currentThreshold &&
+              ImageHasher::hammingDistance(phash, cand.phash) <=
+                  m_currentThreshold) {
+            match = true;
+          }
+        } else {
+          if (ImageHasher::hammingDistance(dhash, cand.dhash) <=
+                  m_currentThreshold ||
+              ImageHasher::hammingDistance(phash, cand.phash) <=
+                  m_currentThreshold) {
+            match = true;
+          }
+        }
+        if (match) {
+          foundGroup.images.push_back(cand);
+        }
+      }
+
+      // 重複が見つかった場合のみ追加（自分1枚だけなら追加しない）
+      if (foundGroup.images.size() > 1) {
+        results.push_back(foundGroup);
+      }
+    }
+  }
+
+  if (!results.empty()) {
+    updateResultGrid(results);
+  }
+
+  if (dirAdded) {
+    saveSettings();
+  }
 }
 
 void MainWindow::onAddDirectory() {
@@ -348,7 +452,8 @@ void MainWindow::onStartScan() {
     auto results = QtConcurrent::blockingMapped(allFiles, processFunc);
 
     // 4. DBへの一括保存 (メインスレッドの管理外のDB接続で行う)
-    QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    QString dataPath =
+        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     QString dbPath = dataPath + "/dupfind_cache.db";
     DatabaseManager db(dbPath.toStdString());
     if (db.open()) {
@@ -568,7 +673,8 @@ void MainWindow::onDeleteSelected() {
   if (allCheckedInSomeGroup) {
     auto warnRes = QMessageBox::warning(
         this, tr("Warning: All images selected"),
-        tr("一部の類似画像グループで、すべての画像が削除対象としてチェックされてい"
+        tr("一部の類似画像グループで、すべての画像が削除対象としてチェックされ"
+           "てい"
            "ます。\n"
            "このまま削除すると、それらの画像ファイルはすべて失われます。\n\n"
            "本当に削除を実行しますか？"),
@@ -592,10 +698,13 @@ void MainWindow::onDeleteSelected() {
         failures.push_back(qPath);
       }
     }
+    // 壊れたサムネイルが表示される現象を抑えるため、ここでいったんCOMMITする
+    m_dbManager->commitTransaction();
 
     if (!failures.empty()) {
-      QString msg = tr("The following files could not be moved to trash and were "
-                       "NOT deleted:\n\n");
+      QString msg =
+          tr("The following files could not be moved to trash and were "
+             "NOT deleted:\n\n");
       for (const auto &f : failures) {
         msg += f + "\n";
       }

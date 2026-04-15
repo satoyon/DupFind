@@ -1,15 +1,15 @@
 #pragma once
 #include "DatabaseManager.hpp"
-#include "ResultListModel.hpp"
-#include "ResultItemDelegate.hpp"
 #include "ResultFilterProxyModel.hpp"
-#include <QLineEdit>
-#include <unordered_set>
+#include "ResultItemDelegate.hpp"
+#include "ResultListModel.hpp"
 #include <QCheckBox>
 #include <QCloseEvent>
+#include <QDropEvent>
 #include <QEvent>
 #include <QFutureWatcher>
 #include <QLabel>
+#include <QLineEdit>
 #include <QListView>
 #include <QListWidget>
 #include <QMainWindow>
@@ -19,6 +19,7 @@
 #include <QSlider>
 #include <QTimer>
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 // アプリケーションのメインウィンドウ（GUI）を管理するクラス
@@ -35,15 +36,16 @@ private slots:
   void onRemoveDirectory(); // リストからディレクトリ除外ボタン押下
   void onStartScan();       // 重複検索スキャン開始ボタン押下
   void onDeleteSelected();  // チェックされた重複画像を削除するボタン押下
-  void onThresholdChanged(int value); // 類似度しきい値スライダー変更時
-  void onStrictChanged(int state);    // Strictモードチェックボックス変更時
-  void onScanFinished();              // ディレクトリの一括スキャン完了時
-  void performAsyncSearch();          // 非同期での類似画像群の抽出実行
-  void onSearchFinished();            // 類似画像の検索完了時
-  void onClearResults();              // 結果表示のクリア
+  void onThresholdChanged(int value);    // 類似度しきい値スライダー変更時
+  void onStrictChanged(int state);       // Strictモードチェックボックス変更時
+  void onScanFinished();                 // ディレクトリの一括スキャン完了時
+  void performAsyncSearch();             // 非同期での類似画像群の抽出実行
+  void onSearchFinished();               // 類似画像の検索完了時
+  void onClearResults();                 // 結果表示のクリア
   void removeGroupFromView(int groupId); // 指定したグループをリストから除外
-  void onContextMenuRequested(const std::string& path, int groupId, const QPoint& globalPos);
-  void onFileDoubleClicked(const std::string& path);
+  void onContextMenuRequested(const std::string &path, int groupId,
+                              const QPoint &globalPos);
+  void onFileDoubleClicked(const std::string &path);
   void onSearchTextChanged(const QString &text);
 
 private:
@@ -51,8 +53,9 @@ private:
   void setupUi();      // UIのレイアウトと初期化
   void loadSettings(); // INIファイルからの設定値復元
   void saveSettings(); // INIファイルへの設定値保存
-  void updateResultGrid(const std::vector<DuplicateGroup>
-                            &groups, bool preserveState = false); // 結果グリッドへサムネイルを並べる
+  void updateResultGrid(
+      const std::vector<DuplicateGroup> &groups,
+      bool preserveState = false); // 結果グリッドへサムネイルを並べる
   std::vector<ImageData>
   getFilteredImages(); // 現在リストにあるディレクトリの画像のみ抽出
   bool
@@ -60,6 +63,8 @@ private:
               QEvent *event) override; // 右クリックメニュー等のイベントフィルタ
   void
   closeEvent(QCloseEvent *event) override; // ウィンドウ終了時の保存処理など
+  void dropEvent(QDropEvent *e) override; // ドロップを受け付ける
+  void dragEnterEvent(QDragEnterEvent *event) override; // ドロップを受け付ける
 
   // データベースマネージャーのインスタンス
   std::unique_ptr<DatabaseManager> m_dbManager;
@@ -100,5 +105,6 @@ private:
   QStringList m_loadedDirs; // 起動時にロードされたディレクトリ群
 
   std::vector<DuplicateGroup> m_currentGroups; // 現在表示中のグループ一覧
-  std::unordered_set<std::string> m_ignoredPaths; // セッション中に除外した画像のパス
+  std::unordered_set<std::string>
+      m_ignoredPaths; // セッション中に除外した画像のパス
 };
