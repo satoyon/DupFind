@@ -1,5 +1,6 @@
 #include "MainWindow.hpp"
 #include "ImageHasher.hpp"
+#include <QDateTime>
 #include <QDir>
 #include <QDirIterator>
 #include <QFile>
@@ -7,6 +8,7 @@
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QMessageBox>
+#include <QNetworkRequest>
 #include <QPixmap>
 #include <QUrl>
 #include <QVBoxLayout>
@@ -39,6 +41,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   m_dbManager->open();
   m_scanWatcher = new QFutureWatcher<void>(this);
   m_searchWatcher = new QFutureWatcher<std::vector<DuplicateGroup>>(this);
+  m_networkManager = new QNetworkAccessManager(this);
+  connect(m_networkManager, &QNetworkAccessManager::finished, this,
+          &MainWindow::onUrlDownloadFinished);
 
   m_searchTimer = new QTimer(this);
   m_searchTimer->setSingleShot(true);
@@ -271,8 +276,17 @@ void MainWindow::dropEvent(QDropEvent *e) {
 
   for (const QUrl &url : mimeData->urls()) {
     QString localPath = url.toLocalFile();
-    if (localPath.isEmpty())
+    if (localPath.isEmpty()) {
+      // 外部URLの可能性がある場合
+      if (url.isValid() &&
+          (url.scheme() == "http" || url.scheme() == "https")) {
+        m_networkManager->get(QNetworkRequest(url));
+        m_progressBar->setVisible(true);
+        m_progressBar->setRange(0, 0);
+        m_progressBar->setFormat(tr("Downloading image..."));
+      }
       continue;
+    }
 
     QFileInfo fileInfo(localPath);
     if (fileInfo.isDir()) {
@@ -293,7 +307,7 @@ void MainWindow::dropEvent(QDropEvent *e) {
       cv::Mat img = ImageHasher::loadImage(localPath.toStdString());
       if (img.empty())
         continue;
-      
+
       // ここでクリア
       m_model->clear();
 
@@ -717,4 +731,72 @@ void MainWindow::onDeleteSelected() {
         images, m_currentThreshold, m_strictMode);
     updateResultGrid(m_currentGroups);
   }
+}
+
+void MainWindow::onUrlDownloadFinished(QNetworkReply *reply) {
+  m_progressBar->setVisible(false);
+  if (reply->error() != QNetworkReply::NoError) {
+    QMessageBox::warning(
+        this, tr("Download Error"),
+        tr("Failed to download image: %1").arg(reply->errorString()));
+    reply->deleteLater();
+    return;
+  }
+
+  QByteArray data = reply->readAll();
+  reply->deleteLater();
+
+  std::vector<uchar> buffer(data.begin(), data.end());
+  cv::Mat img = cv::imdecode(buffer, cv::IMREAD_COLOR);
+
+  if (img.empty()) {
+    QMessageBox::warning(this, tr("Invalid Image"),
+                         tr("The dropped URL does not contain a valid image."));
+    return;
+  }
+
+  m_model->clear();
+  uint64_t dhash = ImageHasher::calculateDHash(img);
+  uint64_t phash = ImageHasher::calculatePHash(img);
+
+  auto candidates = getFilteredImages();
+  DuplicateGroup foundGroup;
+
+  // ドロップされた画像（URL）を「Dropped Image」として追加
+  ImageData dropped;
+  dropped.path = reply->url().toString().toStdString();
+  dropped.dhash = dhash;
+  dropped.phash = phash;
+  dropped.file_size = data.size();
+  dropped.timestamp = QDateTime::currentSecsSinceEpoch();
+  foundGroup.images.push_back(dropped);
+
+  for (const auto &cand : candidates) {
+    bool match = false;
+    if (m_strictMode) {
+      if (ImageHasher::hammingDistance(dhash, cand.dhash) <=
+              m_currentThreshold &&
+          ImageHasher::hammingDistance(phash, cand.phash) <=
+              m_currentThreshold) {
+        match = true;
+      }
+    } else {
+      if (ImageHasher::hammingDistance(dhash, cand.dhash) <=
+              m_currentThreshold ||
+          ImageHasher::hammingDistance(phash, cand.phash) <=
+              m_currentThreshold) {
+        match = true;
+      }
+    }
+    if (match) {
+      foundGroup.images.push_back(cand);
+    }
+  }
+
+  std::vector<DuplicateGroup> results;
+  if (foundGroup.images.size() > 1) {
+    results.push_back(foundGroup);
+  }
+
+  updateResultGrid(results);
 }

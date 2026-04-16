@@ -13,6 +13,8 @@
 #include <QListView>
 #include <QListWidget>
 #include <QMainWindow>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 #include <QObject>
 #include <QProgressBar>
 #include <QPushButton>
@@ -47,6 +49,7 @@ private slots:
                               const QPoint &globalPos);
   void onFileDoubleClicked(const std::string &path);
   void onSearchTextChanged(const QString &text);
+  void onUrlDownloadFinished(QNetworkReply *reply);
 
 private:
   // 内部処理・初期化メソッド
@@ -63,7 +66,7 @@ private:
               QEvent *event) override; // 右クリックメニュー等のイベントフィルタ
   void
   closeEvent(QCloseEvent *event) override; // ウィンドウ終了時の保存処理など
-  void dropEvent(QDropEvent *e) override; // ドロップを受け付ける
+  void dropEvent(QDropEvent *e) override;  // ドロップを受け付ける
   void dragEnterEvent(QDragEnterEvent *event) override; // ドロップを受け付ける
 
   // データベースマネージャーのインスタンス
@@ -107,4 +110,6 @@ private:
   std::vector<DuplicateGroup> m_currentGroups; // 現在表示中のグループ一覧
   std::unordered_set<std::string>
       m_ignoredPaths; // セッション中に除外した画像のパス
+
+  QNetworkAccessManager *m_networkManager;
 };

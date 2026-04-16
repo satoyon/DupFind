@@ -37,44 +37,51 @@ void ResultListModel::setGroups(const std::vector<DuplicateGroup>& groups, bool 
     m_items.clear();
     
     int groupId = 0;
-    for (const auto& group : groups) {
-        if (group.images.empty()) continue;
+    if (groups.empty()) {
+        ResultListItem msg;
+        msg.type = ResultListItem::Message;
+        msg.headerText = tr("No similar images found.");
+        m_items.push_back(msg);
+    } else {
+        for (const auto& group : groups) {
+            if (group.images.empty()) continue;
 
-        const ImageData* bestImage = &group.images[0];
-        for (size_t i = 1; i < group.images.size(); ++i) {
-            if (group.images[i].file_size > bestImage->file_size) {
-                bestImage = &group.images[i];
+            const ImageData* bestImage = &group.images[0];
+            for (size_t i = 1; i < group.images.size(); ++i) {
+                if (group.images[i].file_size > bestImage->file_size) {
+                    bestImage = &group.images[i];
+                }
             }
-        }
 
-        for (const auto& img : group.images) {
-            if (preserveState && oldState.find(img.path) != oldState.end()) {
-                m_checkStates[img.path] = oldState[img.path];
-            } else {
-                m_checkStates[img.path] = (&img != bestImage);
+            for (const auto& img : group.images) {
+                if (preserveState && oldState.find(img.path) != oldState.end()) {
+                    m_checkStates[img.path] = oldState[img.path];
+                } else {
+                    m_checkStates[img.path] = (&img != bestImage);
+                }
             }
-        }
 
-        ResultListItem header;
-        header.type = ResultListItem::Header;
-        header.groupId = groupId;
-        header.headerText = tr("Duplicate Group - %1 images").arg(group.images.size());
-        m_items.push_back(header);
-        
-        ResultListItem rowItem;
-        rowItem.type = ResultListItem::ImageRow;
-        rowItem.groupId = groupId;
-        for (const auto& img : group.images) {
-            rowItem.images.push_back(img);
-            if (rowItem.images.size() == 4) {
+            ResultListItem header;
+            header.type = ResultListItem::Header;
+            header.groupId = groupId;
+            header.headerText = tr("Duplicate Group - %1 images").arg(group.images.size());
+            m_items.push_back(header);
+            
+            ResultListItem rowItem;
+            rowItem.type = ResultListItem::ImageRow;
+            rowItem.groupId = groupId;
+            for (const auto& img : group.images) {
+                rowItem.images.push_back(img);
+                if (rowItem.images.size() == 4) {
+                    m_items.push_back(rowItem);
+                    rowItem.images.clear();
+                }
+            }
+            if (!rowItem.images.empty()) {
                 m_items.push_back(rowItem);
-                rowItem.images.clear();
             }
+            groupId++;
         }
-        if (!rowItem.images.empty()) {
-            m_items.push_back(rowItem);
-        }
-        groupId++;
     }
     endResetModel();
 }

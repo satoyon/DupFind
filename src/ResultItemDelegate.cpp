@@ -55,6 +55,9 @@ void ResultItemDelegate::paint(QPainter *painter,
     painter->setPen(Qt::black);
     painter->drawText(r.adjusted(5, 0, -5, 0), Qt::AlignVCenter | Qt::AlignLeft,
                       item.headerText);
+  } else if (item.type == ResultListItem::Message) {
+    painter->setPen(QColor("#999999"));
+    painter->drawText(option.rect, Qt::AlignCenter, item.headerText);
   } else {
     int cardWidth = option.rect.width() / 4;
     for (int i = 0; i < static_cast<int>(item.images.size()); ++i) {
@@ -121,6 +124,8 @@ QSize ResultItemDelegate::sizeHint(const QStyleOptionViewItem &option,
   const auto &item = model->getItem(sourceIndex.row());
   if (item.type == ResultListItem::Header) {
     return QSize(option.rect.width(), 40);
+  } else if (item.type == ResultListItem::Message) {
+    return QSize(option.rect.width(), 100);
   } else {
     return QSize(option.rect.width(), 220);
   }

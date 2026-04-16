@@ -115,5 +115,9 @@ Are you sure you want to execute the deletion?</translation>
         <source>Duplicate Group - %1 images</source>
         <translation>Duplicate Group - %1 images</translation>
     </message>
+    <message>
+        <source>No similar images found.</source>
+        <translation>No similar images found.</translation>
+    </message>
 </context>
 </TS>

@@ -115,5 +115,9 @@
         <source>Duplicate Group - %1 images</source>
         <translation>Группа дубликатов - %1 изображений</translation>
     </message>
+    <message>
+        <source>No similar images found.</source>
+        <translation>Похожие изображения не найдены.</translation>
+    </message>
 </context>
 </TS>

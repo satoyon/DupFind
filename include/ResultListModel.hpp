@@ -7,7 +7,7 @@
 #include "SimilaritySearch.hpp"
 
 struct ResultListItem {
-    enum Type { Header, ImageRow };
+    enum Type { Header, ImageRow, Message };
     Type type;
     int groupId;
     QString headerText;

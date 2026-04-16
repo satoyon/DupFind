@@ -115,5 +115,9 @@ Sind Sie sicher, dass Sie den Löschvorgang ausführen möchten?</translation>
         <source>Duplicate Group - %1 images</source>
         <translation>Duplikatgruppe - %1 Bilder</translation>
     </message>
+    <message>
+        <source>No similar images found.</source>
+        <translation>Keine ähnlichen Bilder gefunden.</translation>
+    </message>
 </context>
 </TS>

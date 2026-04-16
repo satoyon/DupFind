@@ -17,7 +17,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 # Qt 6
-find_package(Qt6 COMPONENTS Widgets Concurrent Linguist REQUIRED)
+find_package(Qt6 COMPONENTS Widgets Concurrent Linguist Network REQUIRED)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
@@ -41,6 +41,7 @@ target_link_libraries(DupFindCore
     PUBLIC 
         Qt6::Widgets
         Qt6::Concurrent
+        Qt6::Network
         ${OpenCV_LIBS}
         SQLite::SQLite3
 )

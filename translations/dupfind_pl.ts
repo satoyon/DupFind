@@ -115,5 +115,9 @@ Czy na pewno chcesz wykonać usuwanie?</translation>
         <source>Duplicate Group - %1 images</source>
         <translation>Grupa duplikatów - %1 obrazów</translation>
     </message>
+    <message>
+        <source>No similar images found.</source>
+        <translation>Nie znaleziono podobnych obrazów.</translation>
+    </message>
 </context>
 </TS>

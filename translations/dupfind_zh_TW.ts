@@ -115,5 +115,9 @@
         <source>Duplicate Group - %1 images</source>
         <translation>重複組 - %1 張圖片</translation>
     </message>
+    <message>
+        <source>No similar images found.</source>
+        <translation>未找到相似圖像。</translation>
+    </message>
 </context>
 </TS>

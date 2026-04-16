@@ -113,7 +113,11 @@ Tem a certeza de que deseja executar a exclusão?</translation>
     <name>ResultListModel</name>
     <message>
         <source>Duplicate Group - %1 images</source>
-        <translation>Grupo de duplicatas - %1 imagens</translation>
+        <translation>Grupo de duplicadas - %1 imagens</translation>
+    </message>
+    <message>
+        <source>No similar images found.</source>
+        <translation>Nenhuma imagem semelhante encontrada.</translation>
     </message>
 </context>
 </TS>

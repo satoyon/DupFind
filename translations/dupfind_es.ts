@@ -115,5 +115,9 @@ Si continúa, todos esos archivos de imagen se perderán.
         <source>Duplicate Group - %1 images</source>
         <translation>Grupo de duplicados - %1 imágenes</translation>
     </message>
+    <message>
+        <source>No similar images found.</source>
+        <translation>No se encontraron imágenes similares.</translation>
+    </message>
 </context>
 </TS>

@@ -115,5 +115,9 @@
         <source>Duplicate Group - %1 images</source>
         <translation>중복 그룹 - %1 개의 이미지</translation>
     </message>
+    <message>
+        <source>No similar images found.</source>
+        <translation>유사한 이미지를 찾을 수 없습니다.</translation>
+    </message>
 </context>
 </TS>

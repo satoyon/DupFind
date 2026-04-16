@@ -115,5 +115,9 @@
         <source>Duplicate Group - %1 images</source>
         <translation>重複グループ - %1 枚の画像</translation>
     </message>
+    <message>
+        <source>No similar images found.</source>
+        <translation>類似画像が見つかりませんでした。</translation>
+    </message>
 </context>
 </TS>
