@@ -1,5 +1,6 @@
 #include "MainWindow.hpp"
 #include "ImageHasher.hpp"
+#include <opencv2/imgproc.hpp>
 #include <QDateTime>
 #include <QDir>
 #include <QDirIterator>
@@ -770,6 +771,12 @@ void MainWindow::onUrlDownloadFinished(QNetworkReply *reply) {
   dropped.file_size = data.size();
   dropped.timestamp = QDateTime::currentSecsSinceEpoch();
   foundGroup.images.push_back(dropped);
+
+  // サムネイルをモデルに追加（URLパスだとQImageReaderで読めないため）
+  cv::Mat rgb;
+  cv::cvtColor(img, rgb, cv::COLOR_BGR2RGB);
+  QImage qimg(rgb.data, rgb.cols, rgb.rows, rgb.step, QImage::Format_RGB888);
+  m_model->addThumbnail(dropped.path, qimg.copy()); // copy to ensure data ownership
 
   for (const auto &cand : candidates) {
     bool match = false;

@@ -5,6 +5,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(USE_NATIVE_OPTIMIZATION "Optimize for the local machine" OFF)
 
+# WIndows用アイコン
+set(app_icon "${CMAKE_CURRENT_SOURCE_DIR}/icons/DupFind.ico")
+
 # 最適化と popcnt 命令出力のためのフラグ設定
 if(MSVC)
     add_compile_options(/arch:AVX2)
@@ -54,7 +57,12 @@ list(REMOVE_ITEM CORE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/CmdMain.cpp")
 set_target_properties(DupFindCore PROPERTIES SOURCES "${CORE_SOURCES}")
 
 # GUI target
-add_executable(${PROJECT_NAME} src/main.cpp)
+#add_executable(${PROJECT_NAME} src/main.cpp)
+qt_add_executable(${PROJECT_NAME}
+    src/main.cpp
+    ${app_icon}
+)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE DupFindCore)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -75,7 +83,7 @@ qt_add_translations(${PROJECT_NAME}
         translations/dupfind_pt.ts
         translations/dupfind_pl.ts
         translations/dupfind_ko.ts
-    RESOURCE translations.qrc
+    RESOURCE i18n
 )
 
 # CLI target

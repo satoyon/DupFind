@@ -35,6 +35,7 @@ public:
 
     const std::unordered_map<std::string, bool>& getCheckStates() const;
     QPixmap getThumbnail(const std::string& path) const;
+    void addThumbnail(const std::string& path, const QImage& image);
 
 private:
     void requestThumbnail(const std::string& path) const;

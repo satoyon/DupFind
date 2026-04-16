@@ -129,6 +129,13 @@ QPixmap ResultListModel::getThumbnail(const std::string& path) const {
     return QPixmap();
 }
 
+void ResultListModel::addThumbnail(const std::string& path, const QImage& image) {
+    if (!image.isNull()) {
+        m_thumbnails[path] = QPixmap::fromImage(image).scaled(150, 150, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        emitRowDataChangedForPath(path);
+    }
+}
+
 void ResultListModel::requestThumbnail(const std::string& path) const {
     if (m_loadingPaths.contains(path)) return;
     
