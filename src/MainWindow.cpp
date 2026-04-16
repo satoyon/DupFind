@@ -730,6 +730,11 @@ void MainWindow::onDeleteSelected() {
     auto images = getFilteredImages();
     m_currentGroups = SimilaritySearch::findDuplicates(
         images, m_currentThreshold, m_strictMode);
+    
+    // 絞り込み状態を解除
+    m_searchBox->clear();
+    m_searchBox->hide();
+
     updateResultGrid(m_currentGroups);
   }
 }
