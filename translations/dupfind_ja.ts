@@ -97,6 +97,26 @@
         <source>Deletion Error</source>
         <translation>削除エラー</translation>
     </message>
+    <message>
+        <source>Downloading image...</source>
+        <translation>画像をダウンロード中...</translation>
+    </message>
+    <message>
+        <source>Download Error</source>
+        <translation>ダウンロードエラー</translation>
+    </message>
+    <message>
+        <source>Failed to download image: %1</source>
+        <translation>画像のダウンロードに失敗しました: %1</translation>
+    </message>
+    <message>
+        <source>Invalid Image</source>
+        <translation>無効な画像</translation>
+    </message>
+    <message>
+        <source>The dropped URL does not contain a valid image.</source>
+        <translation>ドロップされたURLに有効な画像が含まれていません。</translation>
+    </message>
 </context>
 <context>
     <name>ResultItemDelegate</name>

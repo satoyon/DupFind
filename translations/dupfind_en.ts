@@ -97,6 +97,26 @@ Are you sure you want to execute the deletion?</translation>
         <source>Deletion Error</source>
         <translation>Deletion Error</translation>
     </message>
+    <message>
+        <source>Downloading image...</source>
+        <translation>Downloading image...</translation>
+    </message>
+    <message>
+        <source>Download Error</source>
+        <translation>Download Error</translation>
+    </message>
+    <message>
+        <source>Failed to download image: %1</source>
+        <translation>Failed to download image: %1</translation>
+    </message>
+    <message>
+        <source>Invalid Image</source>
+        <translation>Invalid Image</translation>
+    </message>
+    <message>
+        <source>The dropped URL does not contain a valid image.</source>
+        <translation>The dropped URL does not contain a valid image.</translation>
+    </message>
 </context>
 <context>
     <name>ResultItemDelegate</name>

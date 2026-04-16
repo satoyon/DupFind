@@ -97,6 +97,26 @@ Si continúa, todos esos archivos de imagen se perderán.
         <source>Deletion Error</source>
         <translation>Error de eliminación</translation>
     </message>
+    <message>
+        <source>Downloading image...</source>
+        <translation>Descargando imagen...</translation>
+    </message>
+    <message>
+        <source>Download Error</source>
+        <translation>Error de descarga</translation>
+    </message>
+    <message>
+        <source>Failed to download image: %1</source>
+        <translation>Error al descargar la imagen: %1</translation>
+    </message>
+    <message>
+        <source>Invalid Image</source>
+        <translation>Imagen no válida</translation>
+    </message>
+    <message>
+        <source>The dropped URL does not contain a valid image.</source>
+        <translation>La URL soltada no contiene una imagen válida.</translation>
+    </message>
 </context>
 <context>
     <name>ResultItemDelegate</name>

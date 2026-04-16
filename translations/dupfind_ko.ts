@@ -97,6 +97,26 @@
         <source>Deletion Error</source>
         <translation>삭제 오류</translation>
     </message>
+    <message>
+        <source>Downloading image...</source>
+        <translation>이미지 다운로드 중...</translation>
+    </message>
+    <message>
+        <source>Download Error</source>
+        <translation>다운로드 오류</translation>
+    </message>
+    <message>
+        <source>Failed to download image: %1</source>
+        <translation>이미지 다운로드 실패: %1</translation>
+    </message>
+    <message>
+        <source>Invalid Image</source>
+        <translation>유효하지 않은 이미지</translation>
+    </message>
+    <message>
+        <source>The dropped URL does not contain a valid image.</source>
+        <translation>드롭된 URL에 유효한 이미지가 포함되어 있지 않습니다.</translation>
+    </message>
 </context>
 <context>
     <name>ResultItemDelegate</name>

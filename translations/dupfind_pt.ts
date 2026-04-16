@@ -97,6 +97,26 @@ Tem a certeza de que deseja executar a exclusão?</translation>
         <source>Deletion Error</source>
         <translation>Erro de exclusão</translation>
     </message>
+    <message>
+        <source>Downloading image...</source>
+        <translation>Baixando imagem...</translation>
+    </message>
+    <message>
+        <source>Download Error</source>
+        <translation>Erro de download</translation>
+    </message>
+    <message>
+        <source>Failed to download image: %1</source>
+        <translation>Falha ao baixar imagem: %1</translation>
+    </message>
+    <message>
+        <source>Invalid Image</source>
+        <translation>Imagem inválida</translation>
+    </message>
+    <message>
+        <source>The dropped URL does not contain a valid image.</source>
+        <translation>O URL solto não contém uma imagem válida.</translation>
+    </message>
 </context>
 <context>
     <name>ResultItemDelegate</name>

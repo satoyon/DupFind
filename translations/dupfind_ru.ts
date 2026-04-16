@@ -97,6 +97,26 @@
         <source>Deletion Error</source>
         <translation>Ошибка удаления</translation>
     </message>
+    <message>
+        <source>Downloading image...</source>
+        <translation>Загрузка изображения...</translation>
+    </message>
+    <message>
+        <source>Download Error</source>
+        <translation>Ошибка загрузки</translation>
+    </message>
+    <message>
+        <source>Failed to download image: %1</source>
+        <translation>Не удалось загрузить изображение: %1</translation>
+    </message>
+    <message>
+        <source>Invalid Image</source>
+        <translation>Недопустимое изображение</translation>
+    </message>
+    <message>
+        <source>The dropped URL does not contain a valid image.</source>
+        <translation>Перетащенный URL не содержит допустимого изображения.</translation>
+    </message>
 </context>
 <context>
     <name>ResultItemDelegate</name>

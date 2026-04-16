@@ -97,6 +97,26 @@ Czy na pewno chcesz wykonać usuwanie?</translation>
         <source>Deletion Error</source>
         <translation>Błąd usuwania</translation>
     </message>
+    <message>
+        <source>Downloading image...</source>
+        <translation>Pobieranie obrazu...</translation>
+    </message>
+    <message>
+        <source>Download Error</source>
+        <translation>Błąd pobierania</translation>
+    </message>
+    <message>
+        <source>Failed to download image: %1</source>
+        <translation>Nie udało się pobrać obrazu: %1</translation>
+    </message>
+    <message>
+        <source>Invalid Image</source>
+        <translation>Nieprawidłowy obraz</translation>
+    </message>
+    <message>
+        <source>The dropped URL does not contain a valid image.</source>
+        <translation>Upuszczony adres URL nie zawiera prawidłowego obrazu.</translation>
+    </message>
 </context>
 <context>
     <name>ResultItemDelegate</name>

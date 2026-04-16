@@ -97,6 +97,26 @@
         <source>Deletion Error</source>
         <translation>删除错误</translation>
     </message>
+    <message>
+        <source>Downloading image...</source>
+        <translation>正在下载图像...</translation>
+    </message>
+    <message>
+        <source>Download Error</source>
+        <translation>下载错误</translation>
+    </message>
+    <message>
+        <source>Failed to download image: %1</source>
+        <translation>下载图像失败: %1</translation>
+    </message>
+    <message>
+        <source>Invalid Image</source>
+        <translation>无效图像</translation>
+    </message>
+    <message>
+        <source>The dropped URL does not contain a valid image.</source>
+        <translation>拖放的 URL 不包含有效的图像。</translation>
+    </message>
 </context>
 <context>
     <name>ResultItemDelegate</name>

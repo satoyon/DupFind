@@ -97,6 +97,26 @@ Sind Sie sicher, dass Sie den Löschvorgang ausführen möchten?</translation>
         <source>Deletion Error</source>
         <translation>Fehler beim Löschen</translation>
     </message>
+    <message>
+        <source>Downloading image...</source>
+        <translation>Bild wird heruntergeladen...</translation>
+    </message>
+    <message>
+        <source>Download Error</source>
+        <translation>Download-Fehler</translation>
+    </message>
+    <message>
+        <source>Failed to download image: %1</source>
+        <translation>Bild konnte nicht heruntergeladen werden: %1</translation>
+    </message>
+    <message>
+        <source>Invalid Image</source>
+        <translation>Ungültiges Bild</translation>
+    </message>
+    <message>
+        <source>The dropped URL does not contain a valid image.</source>
+        <translation>Die ablegte URL enthält kein gültiges Bild.</translation>
+    </message>
 </context>
 <context>
     <name>ResultItemDelegate</name>
