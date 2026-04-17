@@ -1,7 +1,7 @@
 Source: dupfind
 Section: utils
 Priority: optional
-Maintainer: Satoyon <satoyon@example.com>
+Maintainer: Satoyon <yoneda@gadget.mda.or.jp>
 Build-Depends: debhelper-compat (= 13),
                cmake,
                qt6-base-dev,
