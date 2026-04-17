@@ -30,6 +30,7 @@
 #include <QStandardPaths>
 #include <QUrl>
 #include <QtConcurrent>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   QString dataPath =
@@ -56,10 +57,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
           &MainWindow::onSearchFinished);
 
   // スタイルの適用
-  QFile styleFile(":/styles/resources/style.qss");
+  QFile styleFile(":/styles/style.qss");
   if (styleFile.open(QFile::ReadOnly)) {
-    QString styleSheet = QLatin1String(styleFile.readAll());
+    QString styleSheet = QString::fromUtf8(styleFile.readAll());
     setStyleSheet(styleSheet);
+    qDebug() << "Stylesheet applied successfully from resources. Length:" << styleSheet.length();
+  } else {
+    qWarning() << "Failed to open stylesheet from resource: :/styles/style.qss";
   }
 
   loadSettings(); // setupUi の前に読み込む
