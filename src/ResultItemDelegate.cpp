@@ -86,6 +86,7 @@ void ResultItemDelegate::paint(QPainter *painter,
       QStyleOptionButton cbOpt;
       cbOpt.rect = cbRect;
       cbOpt.text = tr("Delete candidate");
+      cbOpt.palette = option.palette;
       cbOpt.state = QStyle::State_Enabled;
       if (model->isChecked(imgData.path)) {
         cbOpt.state |= QStyle::State_On;
@@ -105,7 +106,7 @@ void ResultItemDelegate::paint(QPainter *painter,
       QFont font = painter->font();
       font.setPixelSize(10);
       painter->setFont(font);
-      painter->setPen(QColor("#666666"));
+      painter->setPen(QColor("#aaaaaa"));
       painter->drawText(textRect,
                         Qt::AlignTop | Qt::AlignLeft | Qt::TextWordWrap, info);
       painter->restore();

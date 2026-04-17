@@ -101,3 +101,23 @@ QSlider::groove:horizontal {
     background: #333333;
     margin: 2px 0;
 }
+
+/* QListView and Checkbox visibility fixes */
+QListView {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border: none;
+}
+
+QListView::item {
+    color: #e0e0e0;
+}
+
+QCheckBox {
+    color: #e0e0e0;
+}
+
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+}

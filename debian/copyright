@@ -3,11 +3,11 @@ Upstream-Name: DupFind
 Source: https://github.com/satoyon/DupFind
 
 Files: *
-Copyright: 2026 Satoyon
+Copyright: 2026 Satoshi Yoneda with Antigravity
 License: MIT
 
 Files: debian/*
-Copyright: 2026 Satoyon
+Copyright: 2026 Satoshi Yoneda with Antigravity
 License: MIT
 
 License: MIT

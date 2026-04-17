@@ -4,4 +4,4 @@
 	dh $@
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DCMAKE_BUILD_TYPE=Release
+	dh_auto_configure -- -DCMAKE_BUILD_TYPE=Release -DUSE_NATIVE_OPTIMIZATION=1
