@@ -106,7 +106,8 @@ QSlider::groove:horizontal {
 QListView {
     background-color: #1e1e1e;
     color: #e0e0e0;
-    border: none;
+    border: 1px solid #333333; /* 境界線を表示 */
+    border-radius: 4px;
 }
 
 QListView::item {
@@ -115,6 +116,7 @@ QListView::item {
 
 QCheckBox {
     color: #e0e0e0;
+    border: 1px solid #333333; /* 境界線を表示 */
 }
 
 QCheckBox::indicator {
