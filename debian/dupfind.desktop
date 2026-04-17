@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=DupFind
+Comment=Find and manage duplicate images
+Exec=DupFind
+Icon=dupfind
+Terminal=false
+Categories=Utility;Graphics;
+Keywords=duplicate;image;search;similarity;

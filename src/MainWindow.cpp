@@ -56,7 +56,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
           &MainWindow::onSearchFinished);
 
   // スタイルの適用
-  QFile styleFile("resources/style.qss");
+  QFile styleFile(":/styles/resources/style.qss");
   if (styleFile.open(QFile::ReadOnly)) {
     QString styleSheet = QLatin1String(styleFile.readAll());
     setStyleSheet(styleSheet);

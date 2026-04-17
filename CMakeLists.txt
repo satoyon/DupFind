@@ -61,6 +61,7 @@ set_target_properties(DupFindCore PROPERTIES SOURCES "${CORE_SOURCES}")
 qt_add_executable(${PROJECT_NAME}
     src/main.cpp
     ${app_icon}
+    resources.qrc
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE DupFindCore)
@@ -89,6 +90,21 @@ qt_add_translations(${PROJECT_NAME}
 # CLI target
 add_executable(DupFindCmd src/CmdMain.cpp)
 target_link_libraries(DupFindCmd PRIVATE DupFindCore)
+
+# -----------------------------------------------------------------------------
+# Installation
+# -----------------------------------------------------------------------------
+include(GNUInstallDirs)
+install(TARGETS ${PROJECT_NAME} DupFindCmd
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+# Desktop file and Icon (only for Linux)
+if(NOT WIN32)
+    install(FILES debian/dupfind.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+    install(FILES Deploy/Assets/Square150x150Logo.png 
+            DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pixmaps 
+            RENAME dupfind.png)
+endif()
 
 # -----------------------------------------------------------------------------
 # Deployment Configuration (Windows)
@@ -128,8 +144,7 @@ if(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${PROJECT_NAME}>" "${DEPLOY_DIR}/"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:DupFindCmd>" "${DEPLOY_DIR}/"
         
-        # 3. リソースディレクトリのコピー
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/resources" "${DEPLOY_DIR}/resources"
+# 3. リソースディレクトリのコピーは不要になったため削除
         
         # 4. vcpkgがビルドディレクトリに出力した サードパーティDLL (OpenCV, SQLiteなど) の収集
         COMMAND powershell -NoProfile -Command "Copy-Item -Path '$<TARGET_FILE_DIR:${PROJECT_NAME}>/*.dll' -Destination '${DEPLOY_DIR}/' -Force -ErrorAction SilentlyContinue"

@@ -1,0 +1,22 @@
+Source: dupfind
+Section: utils
+Priority: optional
+Maintainer: Satoyon <satoyon@example.com>
+Build-Depends: debhelper-compat (= 13),
+               cmake,
+               qt6-base-dev,
+               qt6-icu-dev,
+               qt6-l10n-tools,
+               libopencv-dev,
+               libsqlite3-dev,
+               libprotobuf-dev,
+               protobuf-compiler
+Standards-Version: 4.5.0
+Homepage: https://github.com/satoyon/DupFind
+
+Package: dupfind
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Duplicate image find utility using dHash and pHash.
+ DupFind is a GUI and CLI tool that helps you find and manage
+ duplicate or similar images based on their visual content.

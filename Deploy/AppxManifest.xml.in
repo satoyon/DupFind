@@ -11,8 +11,8 @@
   <!-- 1. パッケージの識別情報                        -->
   <!-- ============================================== -->
   <Identity
-    Name="Satoyon.DupFind"
-    Publisher="CN=Satoyon"
+    Name="GADGETLTD.DupFind"
+    Publisher="CN=84FCE42E-3838-44A0-93FD-65D146092DD3"
     Version="@PROJECT_VERSION@.0"
     ProcessorArchitecture="x64" />
 
@@ -21,7 +21,7 @@
   <!-- ============================================== -->
   <Properties>
     <DisplayName>DupFind</DisplayName>
-    <PublisherDisplayName>Satoyon</PublisherDisplayName>
+    <PublisherDisplayName>GADGET LTD</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -50,7 +50,8 @@
         Description="GUI version of Duplicate Image Finder"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png">
+        Square44x44Logo="Assets\Square44x44Logo.png"
+        AppListEntry="default">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
@@ -61,9 +62,9 @@
         DisplayName="DupFind CLI"
         Description="Command line interface for DupFind"
         BackgroundColor="transparent"
-        AppListEntry="none" 
         Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png">
+        Square44x44Logo="Assets\Square44x44Logo.png"
+        AppListEntry="default">
         </uap:VisualElements>
 
       <Extensions>
