@@ -537,8 +537,10 @@ void MainWindow::performAsyncSearch() {
     m_lastScannedImages = getFilteredImages();
   }
 
-  if (m_lastScannedImages.empty())
+  if (m_lastScannedImages.empty()) {
+    m_progressBar->setVisible(false);
     return;
+  }
 
   m_progressBar->setVisible(true);
   m_progressBar->setRange(0, 0);
