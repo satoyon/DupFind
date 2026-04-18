@@ -64,6 +64,10 @@
         <translation>Удалить из списка(&amp;R)</translation>
     </message>
     <message>
+        <source>Open File Location(&amp;O)</source>
+        <translation>Открыть папку с файлом(&amp;O)</translation>
+    </message>
+    <message>
         <source>Warning: All images selected</source>
         <translation>Предупреждение: Выбраны все изображения</translation>
     </message>

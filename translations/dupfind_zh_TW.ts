@@ -64,6 +64,10 @@
         <translation>從清單中移除(&amp;R)</translation>
     </message>
     <message>
+        <source>Open File Location(&amp;O)</source>
+        <translation>打開檔案位置(&amp;O)</translation>
+    </message>
+    <message>
         <source>Warning: All images selected</source>
         <translation>警告：已選擇所有圖片</translation>
     </message>

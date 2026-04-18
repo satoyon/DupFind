@@ -64,6 +64,10 @@
         <translation>Usuń z listy(&amp;R)</translation>
     </message>
     <message>
+        <source>Open File Location(&amp;O)</source>
+        <translation>Otwórz lokalizację pliku(&amp;O)</translation>
+    </message>
+    <message>
         <source>Warning: All images selected</source>
         <translation>Uwaga: Zaznaczono wszystkie obrazy</translation>
     </message>

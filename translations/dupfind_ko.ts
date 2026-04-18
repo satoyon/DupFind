@@ -64,6 +64,10 @@
         <translation>목록에서 삭제(&amp;R)</translation>
     </message>
     <message>
+        <source>Open File Location(&amp;O)</source>
+        <translation>파일 위치 열기(&amp;O)</translation>
+    </message>
+    <message>
         <source>Warning: All images selected</source>
         <translation>경로: 모든 이미지가 선택되었습니다</translation>
     </message>

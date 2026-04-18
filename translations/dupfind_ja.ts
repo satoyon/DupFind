@@ -64,6 +64,10 @@
         <translation>リストから除外(&amp;R)</translation>
     </message>
     <message>
+        <source>Open File Location(&amp;O)</source>
+        <translation>ファイルの場所を開く(&amp;O)</translation>
+    </message>
+    <message>
         <source>Warning: All images selected</source>
         <translation>警告: すべての画像が選択されています</translation>
     </message>

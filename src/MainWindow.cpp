@@ -1,6 +1,5 @@
 #include "MainWindow.hpp"
 #include "ImageHasher.hpp"
-#include <opencv2/imgproc.hpp>
 #include <QDateTime>
 #include <QDir>
 #include <QDirIterator>
@@ -15,12 +14,14 @@
 #include <QVBoxLayout>
 #include <chrono>
 #include <filesystem>
+#include <opencv2/imgproc.hpp>
 
 #include <QAction>
 #include <QApplication>
 #include <QClipboard>
 #include <QContextMenuEvent>
 #include <QCoreApplication>
+#include <QDebug>
 #include <QDesktopServices>
 #include <QImageReader>
 #include <QMenu>
@@ -30,7 +31,6 @@
 #include <QStandardPaths>
 #include <QUrl>
 #include <QtConcurrent>
-#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   QString dataPath =
@@ -61,7 +61,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   if (styleFile.open(QFile::ReadOnly)) {
     QString styleSheet = QString::fromUtf8(styleFile.readAll());
     setStyleSheet(styleSheet);
-    qDebug() << "Stylesheet applied successfully from resources. Length:" << styleSheet.length();
+    qDebug() << "Stylesheet applied successfully from resources. Length:"
+             << styleSheet.length();
   } else {
     qWarning() << "Failed to open stylesheet from resource: :/styles/style.qss";
   }
@@ -628,6 +629,7 @@ void MainWindow::onContextMenuRequested(const std::string &path, int groupId,
   if (!path.empty()) {
     QMenu menu;
     QAction *copyAction = menu.addAction(tr("Copy Full Path(&C)"));
+    QAction *openFileLocation = menu.addAction(tr("Open File Location(&O)"));
     menu.addSeparator();
     QAction *removeAction = menu.addAction(tr("Remove from List(&R)"));
 
@@ -636,6 +638,9 @@ void MainWindow::onContextMenuRequested(const std::string &path, int groupId,
       QApplication::clipboard()->setText(QString::fromStdString(path));
     } else if (selectedAction == removeAction) {
       removeGroupFromView(groupId);
+    } else if (selectedAction == openFileLocation) {
+      QFileInfo fileInfo(QString::fromStdString(path));
+      QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absolutePath()));
     }
   }
 }
@@ -736,7 +741,7 @@ void MainWindow::onDeleteSelected() {
     auto images = getFilteredImages();
     m_currentGroups = SimilaritySearch::findDuplicates(
         images, m_currentThreshold, m_strictMode);
-    
+
     // 絞り込み状態を解除
     m_searchBox->clear();
     m_searchBox->hide();
@@ -787,7 +792,8 @@ void MainWindow::onUrlDownloadFinished(QNetworkReply *reply) {
   cv::Mat rgb;
   cv::cvtColor(img, rgb, cv::COLOR_BGR2RGB);
   QImage qimg(rgb.data, rgb.cols, rgb.rows, rgb.step, QImage::Format_RGB888);
-  m_model->addThumbnail(dropped.path, qimg.copy()); // copy to ensure data ownership
+  m_model->addThumbnail(dropped.path,
+                        qimg.copy()); // copy to ensure data ownership
 
   for (const auto &cand : candidates) {
     bool match = false;
