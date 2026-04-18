@@ -8,15 +8,8 @@ option(USE_NATIVE_OPTIMIZATION "Optimize for the local machine" OFF)
 # WIndows用アイコン
 set(app_icon "${CMAKE_CURRENT_SOURCE_DIR}/icons/DupFind.ico")
 
-# 最適化と popcnt 命令出力のためのフラグ設定
 if(MSVC)
-    add_compile_options(/arch:AVX2)
     set(X_VCPKG_APPLOCAL_DEPS_INSTALL ON)
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    add_compile_options(-mpopcnt -msse4.2)
-    if(USE_NATIVE_OPTIMIZATION)
-        add_compile_options(-march=native)
-    endif()
 endif()
 
 # Qt 6
@@ -64,6 +57,43 @@ qt_add_executable(${PROJECT_NAME}
     resources.qrc
 )
 
+# CLI target
+add_executable(DupFindCmd src/CmdMain.cpp)
+target_link_libraries(DupFindCmd PRIVATE DupFindCore)
+
+# 最適化オプション
+set(ALL_TARGETS ${PROJECT_NAME} DupFindCmd DupFindCore)
+
+if(MSVC)
+    foreach(target IN LISTS ALL_TARGETS)
+        target_compile_options(${target} PRIVATE /arch:AVX2)
+        
+        target_compile_options(${target} PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:
+                /O2 /Oi /GL /fp:fast
+            >
+        )
+        
+        target_link_options(${target} PRIVATE 
+            $<$<NOT:$<CONFIG:Debug>>:
+                /LTCG /OPT:REF /OPT:ICF
+            >
+        )
+    endforeach()
+
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64")
+        foreach(target IN LISTS ALL_TARGETS)
+            target_compile_options(${target} PRIVATE -mpopcnt -msse4.2)
+        endforeach()
+    endif()
+    if(USE_NATIVE_OPTIMIZATION)
+        foreach(target IN LISTS ALL_TARGETS)
+            target_compile_options(${target} PRIVATE -march=native)
+        endforeach()
+    endif()    
+endif()
+
 target_link_libraries(${PROJECT_NAME} PRIVATE DupFindCore)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -87,9 +117,6 @@ qt_add_translations(${PROJECT_NAME}
     RESOURCE i18n
 )
 
-# CLI target
-add_executable(DupFindCmd src/CmdMain.cpp)
-target_link_libraries(DupFindCmd PRIVATE DupFindCore)
 
 # -----------------------------------------------------------------------------
 # Installation
