@@ -330,31 +330,10 @@ void MainWindow::dropEvent(QDropEvent *e) {
       dropped.timestamp = fileInfo.lastModified().toSecsSinceEpoch();
       foundGroup.images.push_back(dropped);
 
-      for (const auto &cand : candidates) {
-        // 自分自身（パスが同じ）は除外
-        if (cand.path == dropped.path)
-          continue;
-
-        bool match = false;
-        if (m_strictMode) {
-          if (ImageHasher::hammingDistance(dhash, cand.dhash) <=
-                  m_currentThreshold &&
-              ImageHasher::hammingDistance(phash, cand.phash) <=
-                  m_currentThreshold) {
-            match = true;
-          }
-        } else {
-          if (ImageHasher::hammingDistance(dhash, cand.dhash) <=
-                  m_currentThreshold ||
-              ImageHasher::hammingDistance(phash, cand.phash) <=
-                  m_currentThreshold) {
-            match = true;
-          }
-        }
-        if (match) {
-          foundGroup.images.push_back(cand);
-        }
-      }
+      auto similar = SimilaritySearch::findSimilarImages(
+          dropped, candidates, m_currentThreshold, m_strictMode);
+      foundGroup.images.insert(foundGroup.images.end(), similar.begin(),
+                               similar.end());
 
       // 重複が見つかった場合のみ追加（自分1枚だけなら追加しない）
       if (foundGroup.images.size() > 1) {
@@ -796,27 +775,10 @@ void MainWindow::onUrlDownloadFinished(QNetworkReply *reply) {
   m_model->addThumbnail(dropped.path,
                         qimg.copy()); // copy to ensure data ownership
 
-  for (const auto &cand : candidates) {
-    bool match = false;
-    if (m_strictMode) {
-      if (ImageHasher::hammingDistance(dhash, cand.dhash) <=
-              m_currentThreshold &&
-          ImageHasher::hammingDistance(phash, cand.phash) <=
-              m_currentThreshold) {
-        match = true;
-      }
-    } else {
-      if (ImageHasher::hammingDistance(dhash, cand.dhash) <=
-              m_currentThreshold ||
-          ImageHasher::hammingDistance(phash, cand.phash) <=
-              m_currentThreshold) {
-        match = true;
-      }
-    }
-    if (match) {
-      foundGroup.images.push_back(cand);
-    }
-  }
+  auto similar = SimilaritySearch::findSimilarImages(
+      dropped, candidates, m_currentThreshold, m_strictMode);
+  foundGroup.images.insert(foundGroup.images.end(), similar.begin(),
+                           similar.end());
 
   std::vector<DuplicateGroup> results;
   if (foundGroup.images.size() > 1) {

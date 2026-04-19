@@ -123,3 +123,20 @@ SimilaritySearch::findDuplicates(const std::vector<ImageData> &images,
 
   return results;
 }
+
+
+std::vector<ImageData> SimilaritySearch::findSimilarImages(
+    const ImageData &image, const std::vector<ImageData> &images, int threshold,
+    bool strict) {
+  auto FilterFunc = [&](const ImageData &cand) {
+    if (cand.path == image.path)
+      return false;
+    int distD = ImageHasher::hammingDistance(image.dhash, cand.dhash);
+    int distP = ImageHasher::hammingDistance(image.phash, cand.phash);
+    bool similar = strict ? (distD <= threshold && distP <= threshold)
+                          : (distD <= threshold || distP <= threshold);
+    return similar;
+  };
+
+  return QtConcurrent::blockingFiltered(images, FilterFunc);
+}

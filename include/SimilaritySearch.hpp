@@ -16,6 +16,8 @@ public:
     // strict: trueならdHashとpHashの両方、falseなら片方が閾値以下であれば類似と判定
     static std::vector<DuplicateGroup> findDuplicates(const std::vector<ImageData>& images, int threshold = 5, bool strict = false);
 
+    static std::vector<ImageData> findSimilarImages(const ImageData& image, const std::vector<ImageData>& images, int threshold = 5, bool strict = false);
+
 private:
     // 内部で使用されるシンプルなクラスタリングアルゴリズム
 };
