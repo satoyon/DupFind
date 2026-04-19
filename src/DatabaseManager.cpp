@@ -92,6 +92,49 @@ std::vector<ImageData> DatabaseManager::getAllImages() {
     return results;
 }
 
+std::vector<ImageData> DatabaseManager::getImagesInDirectories(const std::vector<std::string>& dirPaths) {
+    if (dirPaths.empty()) return {};
+
+    std::vector<ImageData> results;
+    std::stringstream sql;
+    sql << "SELECT id, path, dhash, phash, timestamp, file_size, is_searched FROM images WHERE ";
+
+    for (size_t i = 0; i < dirPaths.size(); ++i) {
+        if (i > 0) sql << " OR ";
+        sql << "(path LIKE ? OR path = ?)";
+    }
+    sql << ";";
+
+    sqlite3_stmt* stmt;
+    if (sqlite3_prepare_v2(m_db, sql.str().c_str(), -1, &stmt, nullptr) != SQLITE_OK) return results;
+
+    for (size_t i = 0; i < dirPaths.size(); ++i) {
+        std::string dirPath = dirPaths[i];
+        std::string pattern = dirPath;
+        if (!pattern.empty() && (pattern.back() != '/' && pattern.back() != '\\')) {
+            pattern += "/";
+        }
+        std::string likePattern = pattern + "%";
+        
+        sqlite3_bind_text(stmt, static_cast<int>(i * 2 + 1), likePattern.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, static_cast<int>(i * 2 + 2), dirPath.c_str(), -1, SQLITE_TRANSIENT);
+    }
+
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        ImageData data;
+        data.id = sqlite3_column_int64(stmt, 0);
+        data.path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+        data.dhash = static_cast<uint64_t>(sqlite3_column_int64(stmt, 2));
+        data.phash = static_cast<uint64_t>(sqlite3_column_int64(stmt, 3));
+        data.timestamp = sqlite3_column_int64(stmt, 4);
+        data.file_size = sqlite3_column_int64(stmt, 5);
+        data.is_searched = sqlite3_column_int(stmt, 6) != 0;
+        results.push_back(data);
+    }
+    sqlite3_finalize(stmt);
+    return results;
+}
+
 bool DatabaseManager::removeImage(const std::string& path) {
     const char* sql = "DELETE FROM images WHERE path = ?;";
     sqlite3_stmt* stmt;

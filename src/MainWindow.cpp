@@ -74,27 +74,25 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 MainWindow::~MainWindow() {}
 
 std::vector<ImageData> MainWindow::getFilteredImages() {
-  auto allImages = m_dbManager->getAllImages();
   if (m_dirList->count() == 0)
     return {};
 
+  std::vector<std::string> dirPaths;
+  for (int i = 0; i < m_dirList->count(); ++i) {
+    dirPaths.push_back(m_dirList->item(i)->text().toStdString());
+  }
+
+  auto images = m_dbManager->getImagesInDirectories(dirPaths);
+
+  if (m_ignoredPaths.empty()) {
+    return images;
+  }
+
   std::vector<ImageData> filtered;
-  for (const auto &img : allImages) {
-    bool match = false;
-    for (int i = 0; i < m_dirList->count(); ++i) {
-      std::string dirPath = m_dirList->item(i)->text().toStdString();
-      std::string dirPathWithSlash = dirPath;
-      if (!dirPathWithSlash.empty() && dirPathWithSlash.back() != '/' &&
-          dirPathWithSlash.back() != '\\') {
-        dirPathWithSlash += "/";
-      }
-      if (img.path.find(dirPathWithSlash) == 0 || img.path == dirPath) {
-        match = true;
-        break;
-      }
-    }
-    if (match && m_ignoredPaths.find(img.path) == m_ignoredPaths.end()) {
-      filtered.push_back(img);
+  filtered.reserve(images.size());
+  for (auto &&img : images) {
+    if (m_ignoredPaths.find(img.path) == m_ignoredPaths.end()) {
+      filtered.push_back(std::move(img));
     }
   }
   return filtered;

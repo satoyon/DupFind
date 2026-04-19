@@ -82,7 +82,7 @@ SimilaritySearch::findDuplicates(const std::vector<ImageData> &images,
                               : (distD <= threshold || distP <= threshold);
         if (similar) {
           local_edges.emplace_back(i, j);
-          
+
           // バッファが一定量溜まったら、排他制御でDSUにマージして解放
           // 全結果を最後に結合するのを避け、メモリ使用量とヒープの競合を極小化
           if (local_edges.size() >= 1024) {
@@ -124,10 +124,11 @@ SimilaritySearch::findDuplicates(const std::vector<ImageData> &images,
   return results;
 }
 
-
-std::vector<ImageData> SimilaritySearch::findSimilarImages(
-    const ImageData &image, const std::vector<ImageData> &images, int threshold,
-    bool strict) {
+// imagesからimageに類似する画像を検索する
+std::vector<ImageData>
+SimilaritySearch::findSimilarImages(const ImageData &image,
+                                    const std::vector<ImageData> &images,
+                                    int threshold, bool strict) {
   auto FilterFunc = [&](const ImageData &cand) {
     if (cand.path == image.path)
       return false;

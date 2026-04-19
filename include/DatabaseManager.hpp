@@ -31,6 +31,9 @@ public:
     bool addImage(const ImageData& data);
     // DB内の全画像情報を取得する
     std::vector<ImageData> getAllImages();
+    // 指定されたディレクトリ群のいずれかに属する画像をSQLで高速に取得する
+    std::vector<ImageData> getImagesInDirectories(const std::vector<std::string>& dirPaths);
+
     // 指定されたパスの画像をDBから削除する
     bool removeImage(const std::string& path);
     // 実体ファイルが削除済みの古いエントリをDBから消去する
