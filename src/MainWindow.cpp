@@ -716,6 +716,7 @@ void MainWindow::onDeleteSelected() {
 
   if (res == QMessageBox::Yes) {
     std::vector<QString> failures;
+    m_dbManager->beginTransaction();
     for (const auto &path : pathsToDelete) {
       QString qPath = QString::fromStdString(path);
       if (QFile::moveToTrash(qPath)) {
@@ -724,7 +725,6 @@ void MainWindow::onDeleteSelected() {
         failures.push_back(qPath);
       }
     }
-    // 壊れたサムネイルが表示される現象を抑えるため、ここでいったんCOMMITする
     m_dbManager->commitTransaction();
 
     if (!failures.empty()) {
@@ -737,16 +737,17 @@ void MainWindow::onDeleteSelected() {
       QMessageBox::warning(this, tr("Deletion Error"), msg);
     }
 
-    // リストをリフレッシュ
-    auto images = getFilteredImages();
-    m_currentGroups = SimilaritySearch::findDuplicates(
-        images, m_currentThreshold, m_strictMode);
+    // リストとキャッシュをリフレッシュ
+    m_lastScannedImages = getFilteredImages();
 
     // 絞り込み状態を解除
-    m_searchBox->clear();
+    if (!m_searchBox->text().isEmpty()) {
+      m_searchBox->clear();
+    }
     m_searchBox->hide();
 
-    updateResultGrid(m_currentGroups);
+    // 非同期検索を起動して最新の状態に更新
+    performAsyncSearch();
   }
 }
 
