@@ -1,5 +1,6 @@
-dupfind (0.3.1-1) unstable; urgency=low
+dupfind (0.3.2-1) unstable; urgency=low
 
-  * Add open file location context menu.
+  * Fix broken thumbnails after deleting files.
+  * Improved performance.
 
- -- Satoyon <yoneda@gadget.mda.or.jp>  Fri, 18 Apr 2026 00:37:00 +0900
+ -- Satoyon <yoneda@gadget.mda.or.jp>  Sun, 20 Apr 2026 23:53:00 +0900
