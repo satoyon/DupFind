@@ -83,22 +83,26 @@ void ResultItemDelegate::paint(QPainter *painter,
       // Checkbox
       QRect cbRect(cardRect.x() + 5, thumbRect.bottom() + 5, cardWidth - 10,
                    20);
-      QStyleOptionButton cbOpt;
-      cbOpt.rect = cbRect;
-      cbOpt.text = tr("Delete candidate");
-      cbOpt.palette = option.palette;
-      cbOpt.state = QStyle::State_Enabled;
-      if (model->isChecked(imgData.path)) {
-        cbOpt.state |= QStyle::State_On;
-      } else {
-        cbOpt.state |= QStyle::State_Off;
+      bool isLocal = !QString::fromStdString(imgData.path).startsWith("http");
+
+      if (isLocal) {
+        QStyleOptionButton cbOpt;
+        cbOpt.rect = cbRect;
+        cbOpt.text = tr("Delete candidate");
+        cbOpt.palette = option.palette;
+        cbOpt.state = QStyle::State_Enabled;
+        if (model->isChecked(imgData.path)) {
+          cbOpt.state |= QStyle::State_On;
+        } else {
+          cbOpt.state |= QStyle::State_Off;
+        }
+        QApplication::style()->drawControl(QStyle::CE_CheckBox, &cbOpt, painter);
       }
 
-      QApplication::style()->drawControl(QStyle::CE_CheckBox, &cbOpt, painter);
-
       // Info text
-      QRect textRect(cardRect.x() + 5, cbRect.bottom() + 2, cardWidth - 10,
-                     cardRect.bottom() - cbRect.bottom() - 2);
+      int textTop = isLocal ? cbRect.bottom() + 2 : thumbRect.bottom() + 5;
+      QRect textRect(cardRect.x() + 5, textTop, cardWidth - 10,
+                     cardRect.bottom() - textTop - 2);
       QString info = QString("%1 KB\n%2")
                          .arg(imgData.file_size / 1024)
                          .arg(QString::fromStdString(imgData.path));
@@ -163,12 +167,16 @@ bool ResultItemDelegate::editorEvent(QEvent *event, QAbstractItemModel *model,
         } else if (me->button() == Qt::LeftButton) {
           QRect thumbRect(cardRect.x() + (cardWidth - 150) / 2,
                           cardRect.y() + 5, 150, 150);
-          QRect cbRect(cardRect.x() + 5, thumbRect.bottom() + 5, cardWidth - 10,
-                       20);
-          if (cbRect.contains(me->pos())) {
-            bool currentState = listModel->isChecked(imgData.path);
-            listModel->setChecked(imgData.path, !currentState);
-            return true;
+          bool isLocal =
+              !QString::fromStdString(imgData.path).startsWith("http");
+          if (isLocal) {
+            QRect cbRect(cardRect.x() + 5, thumbRect.bottom() + 5,
+                         cardWidth - 10, 20);
+            if (cbRect.contains(me->pos())) {
+              bool currentState = listModel->isChecked(imgData.path);
+              listModel->setChecked(imgData.path, !currentState);
+              return true;
+            }
           }
         }
       }
