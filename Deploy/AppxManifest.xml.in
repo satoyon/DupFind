@@ -44,37 +44,26 @@
   <!-- 5. エントリポイントとスタートメニュー設定      -->
   <!-- ============================================== -->
 <Applications>
-    <Application Id="DupFind" Executable="DupFind.exe" EntryPoint="Windows.FullTrustApplication">
-      <uap:VisualElements
-        DisplayName="DupFind"
-        Description="GUI version of Duplicate Image Finder"
-        BackgroundColor="transparent"
-        Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png"
-        AppListEntry="default">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
-        <uap:SplashScreen Image="Assets\SplashScreen.png" />
-      </uap:VisualElements>
-    </Application>
-
-    <Application Id="DupFindCmd" Executable="DupFindCmd.exe" EntryPoint="Windows.FullTrustApplication">
-      <uap:VisualElements
-        DisplayName="DupFind CLI"
-        Description="Command line interface for DupFind"
-        BackgroundColor="transparent"
-        Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png"
-        AppListEntry="default">
-        </uap:VisualElements>
-
-      <Extensions>
-        <uap3:Extension Category="windows.appExecutionAlias">
-          <uap3:AppExecutionAlias>
+  <Application Id="DupFind" Executable="DupFind.exe" EntryPoint="Windows.FullTrustApplication">
+    <uap:VisualElements
+      DisplayName="DupFind"
+      Description="GUI version of Duplicate Image Finder"
+      BackgroundColor="transparent"
+      Square150x150Logo="Assets\Square150x150Logo.png"
+      Square44x44Logo="Assets\Square44x44Logo.png"
+      AppListEntry="default">
+      <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+      <uap:SplashScreen Image="Assets\SplashScreen.png" />
+    </uap:VisualElements>
+    <Extensions>
+      <uap3:Extension Category="windows.appExecutionAlias">
+        <uap3:AppExecutionAlias>
           <desktop:ExecutionAlias Alias="DupFindCmd.exe" />
-          </uap3:AppExecutionAlias>
-      </uap3:Extension>      </Extensions>
-    </Application>
-  </Applications>
+        </uap3:AppExecutionAlias>
+      </uap3:Extension>
+    </Extensions>
+  </Application>
+</Applications>
 
   <!-- ============================================== -->
   <!-- 6. 既存のWin32APIをフルに使用するための権限  -->
