@@ -596,28 +596,40 @@ void MainWindow::onSearchTextChanged(const QString &text) {
 
 void MainWindow::onFileDoubleClicked(const std::string &path) {
   if (!path.empty()) {
-    QDesktopServices::openUrl(
-        QUrl::fromLocalFile(QString::fromStdString(path)));
+    QString qPath = QString::fromStdString(path);
+    if (qPath.startsWith("http")) {
+      QDesktopServices::openUrl(QUrl(qPath));
+    } else {
+      QDesktopServices::openUrl(QUrl::fromLocalFile(qPath));
+    }
   }
 }
 
 void MainWindow::onContextMenuRequested(const std::string &path, int groupId,
                                         const QPoint &globalPos) {
   if (!path.empty()) {
+    QString qPath = QString::fromStdString(path);
+    bool isUrl = qPath.startsWith("http");
+
     QMenu menu;
     QAction *copyAction = menu.addAction(tr("Copy Full Path(&C)"));
-    QAction *openFileLocation = menu.addAction(tr("Open File Location(&O)"));
+    QAction *openAction =
+        menu.addAction(isUrl ? tr("Open URL(&O)") : tr("Open File Location(&O)"));
     menu.addSeparator();
     QAction *removeAction = menu.addAction(tr("Remove from List(&R)"));
 
     QAction *selectedAction = menu.exec(globalPos);
     if (selectedAction == copyAction) {
-      QApplication::clipboard()->setText(QString::fromStdString(path));
+      QApplication::clipboard()->setText(qPath);
     } else if (selectedAction == removeAction) {
       removeGroupFromView(groupId);
-    } else if (selectedAction == openFileLocation) {
-      QFileInfo fileInfo(QString::fromStdString(path));
-      QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absolutePath()));
+    } else if (selectedAction == openAction) {
+      if (isUrl) {
+        QDesktopServices::openUrl(QUrl(qPath));
+      } else {
+        QFileInfo fileInfo(qPath);
+        QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absolutePath()));
+      }
     }
   }
 }
