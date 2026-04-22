@@ -14,7 +14,14 @@
 
 ## 使い方
 
-実行ファイルとWindowsではDLLなど一式を適当なディレクトリに配置するか、インストーラーを使ってシステムにインストールを行ってください。DupFindがGUI、DupFindCmdがCLIです。
+Windowsのバイナリは、Microsoft Storeからダウンロードできます。
+
+- [Microsoft Store](https://apps.microsoft.com/detail/9N3N3VKZHFRG)
+- [Microsoft Store直接リンク](ms-windows-store://pdp/?productid=9N3N3VKZHFRG)
+
+Microsoft Storeの「無料試用版」をクリックしてインストールしてください（※無料試用版と有償版に違いはありません）。Linux版は、GitHubのReleaseにUbuntu/Debian向けのバイナリパッケージを公開しています。
+
+DupFindがGUI、DupFindCmdがCLIです。
 
 ### DupFind
 
@@ -160,7 +167,12 @@ Note: Since the image similarity judgment requires the `popcnt` instruction, an 
 
 ## Usage
 
-Place the executable along with the necessary DLLs (on Windows) in a directory. You can also install it using the installer.
+Windows binaries can be downloaded from the Microsoft Store.
+
+- [Microsoft Store](https://apps.microsoft.com/detail/9N3N3VKZHFRG)
+- [Microsoft Store Direct Link](ms-windows-store://pdp/?productid=9N3N3VKZHFRG)
+
+Click "Free trial" on the Microsoft Store to install (there is no difference between the free and paid versions). Linux binaries are available in the GitHub Releases section for Ubuntu/Debian.
 
 `DupFind` is the GUI, and `DupFindCmd` is the CLI.
 
